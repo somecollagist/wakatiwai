@@ -1,35 +1,43 @@
 #![no_std]
 #![no_main]
-#![feature(
-	alloc_error_handler,
-	panic_info_message
-)]
+#![feature(alloc_error_handler, panic_info_message)]
 
+mod block;
 mod wtcore;
 
 use wtcore::config::*;
-use wtcore::menu::menu_return;
+use wtcore::menu::display_menu;
+use wtcore::shell::shell_return;
 
 use uefi::prelude::*;
 
 #[entry]
 fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
-	uefi::helpers::init(&mut system_table).unwrap();
+    uefi::helpers::init(&mut system_table).unwrap();
 
-	system_table.stdout().clear().unwrap();
-	println_force!("Wakatiwai Bootloader");
+    system_table.stdout().clear().unwrap();
+    println_force!("Starting Wakatiwai Bootloader");
 
-	match load_config(image_handle, &system_table) {
-		Ok(config) => config,
-		Err(err) => {
-			eprintln!("Failed to load config: {}", err);
-			return menu_return();
-		}
-	};
+    match load_config(image_handle, &system_table) {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("Failed to load config: {}", err);
+            return shell_return();
+        }
+    };
 
-	let config = CONFIG.read();
+    let config = CONFIG.read();
+    dprintln!("Loaded config: {:?}", config);
 
-	dprintln!("Loaded config: {:?}", config);
+    match display_menu(&mut system_table) {
+        Ok(_) => {
+            // Signifies UEFI shell
+            return Status::ABORTED;
+        }
+        Err(err) => {
+            eprintln!("Menu error: {}", err);
+        }
+    }
 
-	menu_return()
+    shell_return()
 }

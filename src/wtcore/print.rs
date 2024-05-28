@@ -1,14 +1,12 @@
 #[macro_export]
 macro_rules! eprint {
-	() => {
-		uefi::print!("");
-	};
-	( $( $payload:expr ),*) => {
+	() => {};
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightRed,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::print!($( $payload, )*);
+		uefi::print!($($arg)*);
 	}
 }
 
@@ -17,35 +15,30 @@ macro_rules! eprintln {
 	() => {
 		uefi::println!("");
 	};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightRed,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::println!($( $payload, )*);
+		uefi::println!($($arg)*);
 	}
 }
 
 #[macro_export]
 macro_rules! wprint {
-	() => {};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
+
 		match config.log_level {
 			crate::LogLevel::DEBUG |
 			crate::LogLevel::NORMAL |
 			crate::LogLevel::QUIET => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::Yellow,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::print!($( $payload, )*);
+				crate::wprint_force!($($arg)*);
 			}
 			crate::LogLevel::SILENT => {}
 		}
@@ -56,42 +49,19 @@ macro_rules! wprint {
 
 #[macro_export]
 macro_rules! wprintln {
-	() => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
-		match config.log_level {
-			crate::LogLevel::DEBUG |
-			crate::LogLevel::NORMAL |
-			crate::LogLevel::QUIET => {
-				uefi::println!("");
-			}
-			crate::LogLevel::SILENT => {}
-		}
 
-		drop(config);
-	};
-	( $( $payload:expr ),*) => {
-		let config = match crate::wtcore::config::CONFIG.try_read() {
-			Some(lock) => lock,
-			None => {
-				panic!("Attempted to read locked config");
-			}
-		};
-	
 		match config.log_level {
 			crate::LogLevel::DEBUG |
 			crate::LogLevel::NORMAL |
 			crate::LogLevel::QUIET => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::Yellow,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::println!($( $payload, )*);
+				crate::wprintln_force!($($arg)*);
 			}
 			crate::LogLevel::SILENT => {}
 		}
@@ -102,23 +72,18 @@ macro_rules! wprintln {
 
 #[macro_export]
 macro_rules! print {
-	() => {};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
+
 		match config.log_level {
 			crate::LogLevel::DEBUG |
 			crate::LogLevel::NORMAL => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::LightGray,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::print!($( $payload, )*);
+				crate::print_force!($($arg)*);
 			}
 			crate::LogLevel::QUIET |
 			crate::LogLevel::SILENT => {}
@@ -130,41 +95,18 @@ macro_rules! print {
 
 #[macro_export]
 macro_rules! println {
-	() => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
-		match config.log_level {
-			crate::LogLevel::DEBUG |
-			crate::LogLevel::NORMAL => {
-				uefi::println!("");
-			}
-			crate::LogLevel::QUIET |
-			crate::LogLevel::SILENT => {}
-		}
 
-		drop(config);
-	};
-	( $( $payload:expr ),*) => {
-		let config = match crate::wtcore::config::CONFIG.try_read() {
-			Some(lock) => lock,
-			None => {
-				panic!("Attempted to read locked config");
-			}
-		};
-	
 		match config.log_level {
 			crate::LogLevel::DEBUG |
 			crate::LogLevel::NORMAL => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::LightGray,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::println!($( $payload, )*);
+				crate::println_force!($($arg)*);
 			}
 			crate::LogLevel::QUIET |
 			crate::LogLevel::SILENT => {}
@@ -176,22 +118,17 @@ macro_rules! println {
 
 #[macro_export]
 macro_rules! dprint {
-	() => {};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
+
 		match config.log_level {
 			crate::LogLevel::DEBUG => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::LightCyan,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::print!($( $payload, )*);
+				crate::dprint_force!($($arg)*);
 			}
 			crate::LogLevel::NORMAL |
 			crate::LogLevel::QUIET |
@@ -204,40 +141,17 @@ macro_rules! dprint {
 
 #[macro_export]
 macro_rules! dprintln {
-	() => {
+	($($arg:tt)*) => {
 		let config = match crate::wtcore::config::CONFIG.try_read() {
 			Some(lock) => lock,
 			None => {
 				panic!("Attempted to read locked config");
 			}
 		};
-	
-		match config.log_level {
-			crate::LogLevel::DEBUG => {
-				uefi::println!("");
-			}
-			crate::LogLevel::NORMAL |
-			crate::LogLevel::QUIET |
-			crate::LogLevel::SILENT => {}
-		}
 
-		drop(config);
-	};
-	( $( $payload:expr ),*) => {
-		let config = match crate::wtcore::config::CONFIG.try_read() {
-			Some(lock) => lock,
-			None => {
-				panic!("Attempted to read locked config");
-			}
-		};
-	
 		match config.log_level {
 			crate::LogLevel::DEBUG => {
-				uefi::helpers::system_table().stdout().set_color(
-					uefi::proto::console::text::Color::LightCyan,
-					uefi::proto::console::text::Color::Black
-				).unwrap();
-				uefi::println!($( $payload, )*);
+				crate::dprintln_force!($($arg)*);
 			}
 			crate::LogLevel::NORMAL |
 			crate::LogLevel::QUIET |
@@ -252,15 +166,13 @@ macro_rules! dprintln {
 
 #[macro_export]
 macro_rules! wprint_force {
-	() => {
-		uefi::print!("");
-	};
-	( $( $payload:expr ),*) => {
+	() => {};
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::Yellow,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::print!($( $payload, )*);
+		uefi::print!($($arg)*);
 	}
 }
 
@@ -269,26 +181,24 @@ macro_rules! wprintln_force {
 	() => {
 		uefi::println!("");
 	};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::Yellow,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::println!($( $payload, )*);
+		uefi::println!($($arg)*);
 	}
 }
 
 #[macro_export]
 macro_rules! print_force {
-	() => {
-		uefi::print!("");
-	};
-	( $( $payload:expr ),*) => {
+	() => {};
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightGray,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::print!($( $payload, )*);
+		uefi::print!($($arg)*);
 	}
 }
 
@@ -297,26 +207,24 @@ macro_rules! println_force {
 	() => {
 		uefi::println!("");
 	};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightGray,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::println!($( $payload, )*);
+		uefi::println!($($arg)*);
 	}
 }
 
 #[macro_export]
 macro_rules! dprint_force {
-	() => {
-		uefi::print!("");
-	};
-	( $( $payload:expr ),*) => {
+	() => {};
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightCyan,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::print!($( $payload, )*);
+		uefi::print!($($arg)*);
 	}
 }
 
@@ -325,11 +233,11 @@ macro_rules! dprintln_force {
 	() => {
 		uefi::println!("");
 	};
-	( $( $payload:expr ),*) => {
+	($($arg:tt)*) => {
 		uefi::helpers::system_table().stdout().set_color(
 			uefi::proto::console::text::Color::LightCyan,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
-		uefi::println!($( $payload, )*);
+		uefi::println!($($arg)*);
 	}
 }
