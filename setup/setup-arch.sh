@@ -1,12 +1,12 @@
 #!/bin/bash
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "This script must be run as root." 1>&2
-    exit 1
+	echo "This script must be run as root." 1>&2
+	exit 1
 fi
 
 pacman -Syy
-pacman -S dosfstools ovmf qemu-desktop rustup --needed --noconfirm
+pacman -S dosfstools jq ovmf qemu-desktop rustup --needed --noconfirm
 
 rustup default nightly
 rustup target install x86_64-unknown-none

@@ -1,9 +1,12 @@
-<h1>Wakatiwai</h1>
+# Wakatiwai
 <p align="right">A simple and configurable UEFI bootloader, written in Rust.</p>
 
 <h2>Table of Contents</h2>
 
-- [About](#about)
+- [Wakatiwai](#wakatiwai)
+	- [About](#about)
+	- [Contribution](#contribution)
+	- [Testing](#testing)
 
 ## About
 Wakatiwai (named after the Māori watercraft "waka tīwai", a simple canoe) is a bootloader for x86_64 UEFI written in Rust. It is engineered to support booting the Eisen operating system.

@@ -1,0 +1,16 @@
+{
+	"partitions": [
+		{
+			"type": "BOOT",
+			"size": "64M"
+		},
+		{
+			"type": "F90358A9-1AA5-4264-8C74-C298A4B801B1",
+			"size": "64M",
+			"fs": "ext2"
+		}
+	],
+	"config": {
+
+	}
+}
