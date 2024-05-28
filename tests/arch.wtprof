@@ -1,0 +1,3 @@
+BOOT	300M
+20	8G	ext4
+19	700M	swap

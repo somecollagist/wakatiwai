@@ -1,0 +1,9 @@
+[package]
+name = "wakatiwai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crc = "3.2.1"
+uefi = "0.28.0"
+uefi-raw = "0.5.2"

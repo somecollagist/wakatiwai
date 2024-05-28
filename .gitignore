@@ -1,0 +1,7 @@
+/target
+Cargo.lock
+
+*.img
+.fdiskcmds.tmp
+/.tmpmnt
+/OVMF
