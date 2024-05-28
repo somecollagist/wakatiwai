@@ -1,6 +1,8 @@
 /target
 Cargo.lock
 
+.vscode
+
 *.img
 .fdiskcmds.tmp
 /.tmpmnt

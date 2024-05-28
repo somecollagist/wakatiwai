@@ -11,6 +11,6 @@
 		}
 	],
 	"config": {
-
+		"loglevel": "NORMAL"
 	}
 }

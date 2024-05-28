@@ -5,5 +5,7 @@ edition = "2021"
 
 [dependencies]
 crc = "3.2.1"
-uefi = "0.28.0"
+microjson = "0.1.6"
+spin = { version = "0.9.8", features = ["rwlock"] }
+uefi = { version = "0.28.0", features = ["alloc"] }
 uefi-raw = "0.5.2"

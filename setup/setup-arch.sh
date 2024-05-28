@@ -9,8 +9,9 @@ pacman -Syy
 pacman -S dosfstools jq ovmf qemu-desktop rustup --needed --noconfirm
 
 rustup default nightly
-rustup target install x86_64-unknown-none
 rustup target install x86_64-unknown-uefi
+rustup target add x86_64-unknown-uefi
+rustup default nightly
 rustup update
 
 cp -r /usr/share/OVMF/x64 OVMF/
