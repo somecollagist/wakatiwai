@@ -3,16 +3,15 @@ use uefi::prelude::Status;
 use uefi::proto::console::text::*;
 use uefi::ResultExt;
 
-use crate::println_force;
+use crate::{boot_services, println_force, system_table};
 
 pub fn shell_return() -> Status {
     println_force!("");
     println_force!("Press ESC to continue to UEFI shell...");
 
     loop {
-        system_table().stdin().reset(false).unwrap();
-        system_table()
-            .boot_services()
+        system_table!().stdin().reset(false).unwrap();
+        boot_services!()
             .wait_for_event([system_table().stdin().wait_for_key_event().unwrap()].as_mut())
             .discard_errdata()
             .unwrap();

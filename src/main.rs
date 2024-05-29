@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(alloc_error_handler, panic_info_message)]
 
-mod block;
+mod blockdev;
 mod wtcore;
 
 use wtcore::config::*;
@@ -18,7 +18,7 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     system_table.stdout().clear().unwrap();
     println_force!("Starting Wakatiwai Bootloader");
 
-    match load_config(image_handle, &system_table) {
+    match load_config(&system_table) {
         Ok(config) => config,
         Err(err) => {
             eprintln!("Failed to load config: {}", err);
@@ -29,7 +29,7 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     let config = CONFIG.read();
     dprintln!("Loaded config: {:?}", config);
 
-    match display_menu(&mut system_table) {
+    match display_menu() {
         Ok(_) => {
             // Signifies UEFI shell
             return Status::ABORTED;

@@ -85,10 +85,12 @@ pub struct BootEntry {
     pub partition: u32,
 }
 
-const BE_KEY_NAME: &str = "name";
-const BE_KEY_PARTITION: &str = "partition";
+impl BootEntry {
+    const KEY_NAME: &'static str = "name";
+    const KEY_PARTITION: &'static str = "partition";
 
-pub const BE_MAX_NAME_LENGTH: usize = 64;
+    pub const MAX_NAME_LENGTH: usize = 64;
+}
 
 macro_rules! config_path {
     () => {
@@ -96,13 +98,10 @@ macro_rules! config_path {
     };
 }
 
-pub fn load_config(image_handle: Handle, system_table: &SystemTable<Boot>) -> Result<(), Status> {
+pub fn load_config(system_table: &SystemTable<Boot>) -> Result<(), Status> {
     println_force!("Loading config...");
 
-    let mut efifs = match system_table
-        .boot_services()
-        .get_image_file_system(image_handle)
-    {
+    let mut efifs = match system_table.boot_services().get_image_file_system(image_handle!()) {
         Ok(ok) => FileSystem::new(ok),
         Err(err) => return Err(err.status()),
     };
@@ -139,6 +138,25 @@ fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
         }
     };
 
+    macro_rules! get_config_var {
+        ($key:ident, $prop:ident, $default:ident, $required:ident, bool) => {
+            if does_exist_key_of_type(json, Config::$key, JSONValueType::Bool) {
+                let setter = json.get_key_value(Config::$key).unwrap().read_boolean().unwrap();
+                let mut config = CONFIG.write();
+                config.$prop = setter;
+                drop(config);
+                dprintln!("Set property {} to {}", Config::$key, setter);
+            } else {
+                if $required {
+                    eprintln!("Could not locate required key \"{}\" while parsing", Config::$key);
+                    return Err(Status::ABORTED);
+                }
+
+                dprintln!("Property {} defaulted to {}", Config::$key, Config::$default);
+            }
+        };
+    }
+
     // Set loglevel
     if does_exist_key_of_type(json, Config::KEY_LOG_LEVEL, JSONValueType::String) {
         let loglevel_str = json
@@ -162,81 +180,10 @@ fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
         dprintln!("Using default loglevel: {:?}", Config::DEFAULT_LOG_LEVEL);
     }
 
-    // Set instantboot
-    if does_exist_key_of_type(json, Config::KEY_INSTANT_BOOT, JSONValueType::Bool) {
-        let instant_boot = json
-            .get_key_value(Config::KEY_INSTANT_BOOT)
-            .unwrap()
-            .read_boolean()
-            .unwrap();
-        let mut config = CONFIG.write();
-        config.instant_boot = instant_boot;
-        drop(config);
-        if instant_boot {
-            dprintln!("Default entry will be booted immediately");
-        } else {
-            dprintln!("Boot menu will await user input");
-        }
-    } else {
-        dprintln!("Using default instantboot: {}", Config::DEFAULT_OFFER_SHELL);
-    }
-
-    // Set offershell
-    if does_exist_key_of_type(json, Config::KEY_OFFER_SHELL, JSONValueType::Bool) {
-        let offer_shell = json
-            .get_key_value(Config::KEY_OFFER_SHELL)
-            .unwrap()
-            .read_boolean()
-            .unwrap();
-        let mut config = CONFIG.write();
-        config.offer_shell = offer_shell;
-        drop(config);
-        if offer_shell {
-            dprintln!("UEFI Shell will be offered in boot menu");
-        } else {
-            dprintln!("UEFI Shell will not be offered in boot menu");
-        }
-    } else {
-        dprintln!("Using default offershell: {}", Config::DEFAULT_OFFER_SHELL);
-    }
-
-    // Set editconfig
-    if does_exist_key_of_type(json, Config::KEY_EDIT_CONFIG, JSONValueType::Bool) {
-        let edit_config = json
-            .get_key_value(Config::KEY_EDIT_CONFIG)
-            .unwrap()
-            .read_boolean()
-            .unwrap();
-        let mut config = CONFIG.write();
-        config.edit_config = edit_config;
-        drop(config);
-        if edit_config {
-            dprintln!("Edit config will be offered in boot menu");
-        } else {
-            dprintln!("Edit config will not be offered in boot menu");
-        }
-    } else {
-        dprintln!("Using default editconfig: {}", Config::DEFAULT_OFFER_SHELL);
-    }
-
-    // Set menuclear
-    if does_exist_key_of_type(json, Config::KEY_MENU_CLEAR, JSONValueType::Bool) {
-        let menu_clear = json
-            .get_key_value(Config::KEY_MENU_CLEAR)
-            .unwrap()
-            .read_boolean()
-            .unwrap();
-        let mut config = CONFIG.write();
-        config.menu_clear = menu_clear;
-        drop(config);
-        if menu_clear {
-            dprintln!("Menu will be cleared");
-        } else {
-            dprintln!("Menu will not be cleared");
-        }
-    } else {
-        dprintln!("Using default menuclear: {}", Config::DEFAULT_MENU_CLEAR);
-    }
+    get_config_var!(KEY_INSTANT_BOOT, instant_boot, DEFAULT_INSTANT_BOOT, false, bool);
+    get_config_var!(KEY_OFFER_SHELL, offer_shell, DEFAULT_OFFER_SHELL, false, bool);
+    get_config_var!(KEY_EDIT_CONFIG, edit_config, KEY_EDIT_CONFIG, false, bool);
+    get_config_var!(KEY_MENU_CLEAR, menu_clear, DEFAULT_MENU_CLEAR, false, bool);
 
     // Load boot entries
     if does_exist_required_key_of_type(json, Config::KEY_BOOTENTRIES, JSONValueType::Array) {
@@ -267,6 +214,7 @@ fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
     let config = CONFIG.read();
     let boot_entries_count = config.boot_entries.len();
     drop(config);
+    
     if boot_entries_count == 0 {
         wprintln!("No boot entries provided, enabling UEFI shell, config editor, and halting for user input...");
         let mut config = CONFIG.write();
@@ -288,27 +236,27 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, JSONParsingError> {
     let mut bootentry: BootEntry = BootEntry::default();
 
     // Boot entry name
-    if !does_exist_required_key_of_type(json, BE_KEY_NAME, JSONValueType::String) {
+    if !does_exist_required_key_of_type(json, BootEntry::KEY_NAME, JSONValueType::String) {
         return Err(JSONParsingError::KeyNotFound);
     }
     bootentry.name = String::from(
-        json.get_key_value(BE_KEY_NAME)
+        json.get_key_value(BootEntry::KEY_NAME)
             .unwrap()
             .read_string()
             .unwrap(),
     );
 
-    if bootentry.name.len() > BE_MAX_NAME_LENGTH {
+    if bootentry.name.len() > BootEntry::MAX_NAME_LENGTH {
         eprintln!("Boot entry name exceeds 64 characters");
         return Err(JSONParsingError::EndOfStream);
     }
 
     // Boot entry partition
-    if !does_exist_required_key_of_type(json, BE_KEY_PARTITION, JSONValueType::Number) {
+    if !does_exist_required_key_of_type(json, BootEntry::KEY_PARTITION, JSONValueType::Number) {
         return Err(JSONParsingError::KeyNotFound);
     }
     bootentry.partition = json
-        .get_key_value(BE_KEY_PARTITION)
+        .get_key_value(BootEntry::KEY_PARTITION)
         .unwrap()
         .read_integer()
         .unwrap() as u32;

@@ -23,12 +23,12 @@ static ANCHOR_END: Once<(usize, usize)> = Once::new();
 static mut CURRENT_OPTION_INDEX: usize = 0;
 static MENU_OPTIONS: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
-pub fn display_menu(system_table: &mut SystemTable<Boot>) -> Result<(), Status> {
-    draw(system_table);
+pub fn display_menu() -> Result<(), Status> {
+    draw_menu();
 
     let config = CONFIG.read();
     if config.is_instant_boot() {
-        let entry = match select_menu_option(system_table, 0).unwrap() {
+        let entry = match select_menu_option(0).unwrap() {
             MenuOption::BootOption(entry) => entry,
             _ => {
                 eprintln!("Instant boot was not a boot entry");
@@ -44,15 +44,14 @@ pub fn display_menu(system_table: &mut SystemTable<Boot>) -> Result<(), Status> 
     let menu_options = MENU_OPTIONS.read();
     let mut menu_option_index = 0;
     #[allow(unused_assignments)] // They are used??
-    let mut menu_option = select_menu_option(system_table, 0).unwrap();
+    let mut menu_option = select_menu_option(0).unwrap();
     loop {
-        menu_option = select_menu_option(system_table, menu_option_index).unwrap_or_else(|| {
-            select_menu_option(system_table, unsafe { CURRENT_OPTION_INDEX }).unwrap()
+        menu_option = select_menu_option(menu_option_index).unwrap_or_else(|| {
+            select_menu_option(unsafe { CURRENT_OPTION_INDEX }).unwrap()
         });
 
-        system_table.stdin().reset(false).unwrap();
-        system_table
-            .boot_services()
+        system_table!().stdin().reset(false).unwrap();
+        boot_services!()
             .wait_for_event(
                 [uefi::helpers::system_table()
                     .stdin()
@@ -63,7 +62,7 @@ pub fn display_menu(system_table: &mut SystemTable<Boot>) -> Result<(), Status> 
             .discard_errdata()
             .unwrap();
 
-        match system_table.stdin().read_key().unwrap() {
+        match system_table!().stdin().read_key().unwrap() {
             Some(Key::Special(ScanCode::UP)) => {
                 if menu_option_index > 0 {
                     menu_option_index -= 1;
@@ -97,13 +96,13 @@ pub fn display_menu(system_table: &mut SystemTable<Boot>) -> Result<(), Status> 
     }
 }
 
-fn draw(system_table: &mut SystemTable<Boot>) {
+fn draw_menu() {
     let config = CONFIG.read();
 
     if config.menu_clear {
-        system_table.stdout().clear().unwrap();
+        system_table!().stdout().clear().unwrap();
     }
-    ANCHOR_START.call_once(|| system_table.stdout().cursor_position());
+    ANCHOR_START.call_once(|| system_table!().stdout().cursor_position());
 
     let mut menu_options = MENU_OPTIONS.write();
     println_force!(" Wakatiwai Bootloader ");
@@ -122,12 +121,12 @@ fn draw(system_table: &mut SystemTable<Boot>) {
         println_force!(" #-@ {}", EDIT_CONFIG_LABEL);
         menu_options.push(String::from(EDIT_CONFIG_LABEL));
     }
-    ANCHOR_END.call_once(|| system_table.stdout().cursor_position());
+    ANCHOR_END.call_once(|| system_table!().stdout().cursor_position());
 
     drop(menu_options);
 }
 
-fn select_menu_option(system_table: &mut SystemTable<Boot>, index: usize) -> Option<MenuOption> {
+fn select_menu_option(index: usize) -> Option<MenuOption> {
     if get_index_cursor(index).is_err() {
         return None;
     }
@@ -136,12 +135,11 @@ fn select_menu_option(system_table: &mut SystemTable<Boot>, index: usize) -> Opt
     let menu_options = MENU_OPTIONS.read();
 
     colour_menu_option(
-        system_table,
         unsafe { CURRENT_OPTION_INDEX },
         Color::LightGray,
         Color::Black,
     );
-    colour_menu_option(system_table, index, Color::White, Color::Black);
+    colour_menu_option(index, Color::White, Color::Black);
 
     unsafe {
         CURRENT_OPTION_INDEX = index;
@@ -163,12 +161,7 @@ fn select_menu_option(system_table: &mut SystemTable<Boot>, index: usize) -> Opt
     ));
 }
 
-fn colour_menu_option(
-    system_table: &mut SystemTable<Boot>,
-    index: usize,
-    foreground: Color,
-    background: Color,
-) -> Option<()> {
+fn colour_menu_option(index: usize, foreground: Color, background: Color) -> Option<()> {
     let menu_options = MENU_OPTIONS.read();
     let cursor_target = match get_index_cursor(index) {
         Ok(ok) => ok,
@@ -177,27 +170,27 @@ fn colour_menu_option(
         }
     };
 
-    system_table
+    system_table!()
         .stdout()
         .set_cursor_position(cursor_target.0, cursor_target.1)
         .unwrap();
-    system_table
+    system_table!()
         .stdout()
         .set_color(foreground, background)
         .unwrap();
-    system_table
+    system_table!()
         .stdout()
         .output_string(
             CStr16::from_str_with_buf(
                 menu_options.get(index).unwrap(),
-                &mut [0 as u16; crate::BE_MAX_NAME_LENGTH + 1],
+                &mut [0 as u16; crate::BootEntry::MAX_NAME_LENGTH + 1],
             )
             .unwrap(),
         )
         .unwrap();
 
     let anchor_end = ANCHOR_END.get().unwrap();
-    system_table
+    system_table!()
         .stdout()
         .set_cursor_position(anchor_end.0, anchor_end.1)
         .unwrap();
