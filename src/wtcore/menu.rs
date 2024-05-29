@@ -137,9 +137,13 @@ fn select_menu_option(index: usize) -> Option<MenuOption> {
     colour_menu_option(
         unsafe { CURRENT_OPTION_INDEX },
         Color::LightGray,
-        Color::Black,
+        Color::Black
     );
     colour_menu_option(index, Color::White, Color::Black);
+    system_table!()
+        .stdout()
+        .set_color(Color::LightGray, Color::Black)
+        .unwrap();
 
     unsafe {
         CURRENT_OPTION_INDEX = index;
