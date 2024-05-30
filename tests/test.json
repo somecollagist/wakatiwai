@@ -18,7 +18,7 @@
 	"config": {
 		"loglevel": "DEBUG",
 		"instantboot": false,
-		"menuclear": false,
+		"menuclear": true,
 		"offershell": false,
 		"editconfig": false,
 		"bootentries": [
@@ -28,8 +28,8 @@
 			},
 			{
 				"name": "MS DOS",
-				"partition": 3,
-				"disk": "7CC0E8B7-0A64-4CA7-9506-2B81A69D6A8D"
+				"disk": "7CC0E8B7-0A64-4CA7-9506-2B81A69D6A8D",
+				"partition": 3
 			}
 		]
 	}

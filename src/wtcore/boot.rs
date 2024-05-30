@@ -1,15 +1,17 @@
 use crate::*;
-use crate::blockdev::device::*;
+use crate::wtcore::config::BootEntry;
 
+/// Possible failures that may occur when trying to boot a given entry.
 #[derive(Debug)]
 pub enum BootFailure {
-    Unknown
+    /// Unknown failure.
+    Unknown,
 }
 
+/// Attempts to boot to a given entry.
+/// Returns an `Some(BootFailure)` if booting failed, and None upon the exiting of a boot program.
 pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
     println!("Booting \"{}\"...", entry.name);
-
-    get_bootloader_device_handle();
 
     return Some(BootFailure::Unknown);
 }

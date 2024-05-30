@@ -28,7 +28,7 @@ The Wakatiwai Bootloader is configured via a file called `wtconfig.json`, locate
 |`offershell`|Boolean|`true`|✘|If `true`, the bootloader will present the option to access the UEFI shell in the boot menu.|
 |`editconfig`|Boolean|`true`|✘|If `true`, the bootloader will present the option to edit the local `wtconfig.json` for future boots in the boot menu.<br><br>**WARNING: If set to `false`, mistakes in the bootloader's configuration can only be fixed from another operating system - your system may become unbootable.**|
 |`menuclear`|Boolean|`true`|✘|If `true`, the screen will be cleared when the boot menu is displayed.|
-|`bootentries`|[BootEntry]|N/A|✔|An array of boot entries to be used by the bootloader. They will be booted preferentially from the start of the array.|
+|`bootentries`|[BootEntry]|N/A|✔|An array of boot entries to be used by the bootloader. They will be booted preferentially from the start of the array.<br><br>If left blank, the bootloader will emit an appropriate warning and automatically offer the user the option to access the UEFI shell or edit the bootloader configuration file.|
 
 ### Boot Entries
 Boot entries are themselves respresented in JSON within the `bootentries` array of the `wtconfig.json`. They take the following **case-sensitive** properties and values:
@@ -36,8 +36,8 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |Property|Type|Default|Required|Notes|
 |---|---|---|---|---|
 |`name`|String|N/A|✔|The name of the boot entry.<br><br>**N.B. This name should be no longer than 64 characters.**|
-|`partition`|Integer|N/A|✔|The partition in which this boot option resides.|
 |`disk`|String|`""`|✘|The GUID of the GPT of the disk upon which this boot option resides. If empty, the bootloader will assume that this boot option occupies the same disk (ergo GPT) as itself.|
+|`partition`|Integer|N/A|✔|The partition in which this boot option resides.|
 
 ## Contribution
 Contributions are more than welcome and will be processed whenever possible. Please adhere to the following guidelines:
