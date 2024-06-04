@@ -1,3 +1,7 @@
+pub mod load;
+mod parse;
+pub mod write;
+
 extern crate alloc;
 
 use alloc::string::String;
@@ -8,11 +12,8 @@ use core::str::FromStr;
 use spin::RwLock;
 use uefi::{cstr16, CStr16};
 
-pub mod load;
-mod parse;
-
 /// The loaded configuration for the bootloader.
-pub static CONFIG: RwLock<Config> = RwLock::new(Config::default_config());
+pub static CONFIG: RwLock<Config> = RwLock::new(Config::new());
 
 /// Configuration variables for the bootloader.
 #[derive(Debug)]
@@ -57,7 +58,7 @@ impl Config {
     const DEFAULT_MENU_CLEAR: bool = true;
 
     /// Returns a default (i.e. empty) configuration.
-    const fn default_config() -> Config {
+    pub const fn new() -> Self {
         Config {
             log_level: Config::DEFAULT_LOG_LEVEL,
             instant_boot: Config::DEFAULT_INSTANT_BOOT,

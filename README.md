@@ -5,7 +5,10 @@
 
 - [Wakatiwai](#wakatiwai)
 	- [About](#about)
+	- [Installation](#installation)
+	- [Using Wakatiwai](#using-wakatiwai)
 	- [`wtconfig.json`](#wtconfigjson)
+		- [Boot Entries](#boot-entries)
 	- [Contribution](#contribution)
 	- [Testing](#testing)
 
@@ -18,17 +21,26 @@ Wakatiwai needs to occupy an EFI System partition on your disk. This partition:
  - must be large enough to function as an EFI System partition (At least 64MB but 300MB-1GB is usually recommended)
  - should be the first partition on disk - this is not necessarily required but is the safest and most conventional position
 
+## Using Wakatiwai
+Upon starting the bootloader, you will be greeted with a list of menu options. Use the up and down keys to focus one of these options, and press the space or enter keys to boot the focused option.
+
+The following keys also have functions:
+|Key|Function|
+|---|---|
+|F5|Restarts the bootloader.|
+|F12|Powers off the system.|
+
 ## `wtconfig.json`
 The Wakatiwai Bootloader is configured via a file called `wtconfig.json`, located in the root of the EFI partition in which the bootloader resides. It takes the following **case-sensitive** properties and values:
 
 |Property|Type|Default|Required|Notes|
 |---|---|---|---|---|
-|`loglevel`|String|`"NORMAL"`|✘|Describes how much logging information will be outputted by the bootloader. Options are: <ul><li>`"SILENT"` (Outputs critical failures only)</li><li>`"QUIET"` (Outputs critical failures and warnings only)</li><li>`"NORMAL"` (Outputs regular messages)</li><li> `"DEBUG"` (Outputs debug messages)</li></ul>|
+|`loglevel`|String|`"NORMAL"`|✘|Describes how much logging information will be outputted by the bootloader. Options are: <ul><li>`"SILENT"` (Outputs errors only)</li><li>`"QUIET"` (Outputs errors and warnings only)</li><li>`"NORMAL"` (Outputs regular messages)</li><li> `"DEBUG"` (Outputs debug messages)</li></ul>|
 |`timeout`|Integer|5|✘|Amount of time in seconds to wait until booting the default boot entry. May also be set to 0 to immediately boot or to a negative number to wait for user input.<br><br>**N.B. This must be a signed long integer (-2,147,483,648 to 2,147,483,647)**|
-|`offershell`|Boolean|`true`|✘|If `true`, the bootloader will present the option to access the UEFI shell in the boot menu.|
-|`editconfig`|Boolean|`true`|✘|If `true`, the bootloader will present the option to edit the local `wtconfig.json` for future boots in the boot menu.<br><br>**WARNING: If set to `false`, mistakes in the bootloader's configuration can only be fixed from another operating system - your system may become unbootable.**|
+|`offershell`|Boolean|`true`|✘|If `true`, the bootloader will present the option to access the UEFI shell in the boot menu.<br><br>**N.B. The UEFI shell is not provided on all machines.**|
+|`editconfig`|Boolean|`true`|✘|If `true`, the bootloader will present the option to edit the local `wtconfig.json` for future boots in the boot menu.<br><br>**WARNING: If set to `false`, mistakes in the bootloader's configuration might only be fixable from another operating system - your system may become unbootable.**|
 |`menuclear`|Boolean|`true`|✘|If `true`, the screen will be cleared when the boot menu is displayed.|
-|`bootentries`|[BootEntry]|N/A|✔|An array of boot entries to be used by the bootloader. They will be booted preferentially from the start of the array.<br><br>If left blank, the bootloader will emit an appropriate warning and automatically offer the user the option to access the UEFI shell or edit the bootloader configuration file.|
+|`bootentries`|[BootEntry]|N/A|✘|An array of boot entries to be used by the bootloader. They will be booted preferentially from the start of the array.<br><br>**N.B. If left blank, the bootloader will emit an appropriate warning and automatically offer the user the option to access the UEFI shell or edit the bootloader configuration file.**|
 
 ### Boot Entries
 Boot entries are themselves respresented in JSON within the `bootentries` array of the `wtconfig.json`. They take the following **case-sensitive** properties and values:

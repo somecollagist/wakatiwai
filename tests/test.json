@@ -5,11 +5,6 @@
 			"size": "64M"
 		},
 		{
-			"type": "F90358A9-1AA5-4264-8C74-C298A4B801B1",
-			"size": "64M",
-			"fs": "ext2"
-		},
-		{
 			"type": "20",
 			"size": "32M",
 			"fs": "fat16"
@@ -20,16 +15,11 @@
 		"instantboot": false,
 		"menuclear": true,
 		"offershell": false,
-		"editconfig": false,
+		"editconfig": true,
 		"bootentries": [
 			{
-				"name": "Eisen",
+				"name": "Test",
 				"partition": 2
-			},
-			{
-				"name": "MS DOS",
-				"disk": "7CC0E8B7-0A64-4CA7-9506-2B81A69D6A8D",
-				"partition": 3
 			}
 		]
 	}

@@ -6,10 +6,20 @@ use crate::wtcore::config::*;
 use crate::wtcore::config::parse::parse_config;
 
 /// Loads the bootloader configuration file.
-///
-/// Returns `Ok(())` on a successful load and `Err(uefi_raw::Status)` on a failure.
-pub fn load_config(system_table: &SystemTable<Boot>) -> Result<(), Status> {
+pub fn load_config() -> Result<(), Status> {
     println_force!("Loading config...");
+
+    parse_config(match read_config() {
+        Ok(ok) => ok,
+        Err(err) => {
+            return Err(err);
+        }
+    })
+}
+
+/// Attempts to read the bootloader configuration file and returns a byte vector containing the file data on a success.
+pub fn read_config() -> Result<Vec<u8>, Status> {
+    let system_table = system_table!();
 
     // Attempt to get the file system containing the bootloader - the config file should be in the same file system
     let mut efifs = match system_table.boot_services().get_image_file_system(image_handle!()) {
@@ -30,12 +40,12 @@ pub fn load_config(system_table: &SystemTable<Boot>) -> Result<(), Status> {
         return Err(Status::ABORTED);
     }
 
-    // Config file path contains a file - parse it as a config file
-    parse_config(match efifs.read(CONFIG_PATH) {
-        Ok(ok) => ok,
+    // Attempt to read the config file
+    match efifs.read(CONFIG_PATH) {
+        Ok(ok) => Ok(ok),
         Err(_) => {
             eprintln!("Failed to read config");
-            return Err(Status::ABORTED);
+            Err(Status::ABORTED)
         }
-    })
+    }
 }

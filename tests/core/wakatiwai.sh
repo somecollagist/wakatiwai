@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJ_DIR=$(realpath $(dirname $0)/..)
+PROJ_DIR=$(realpath $(dirname $0)/../..)
 TEST_DIR=$PROJ_DIR/tests
 
 usage() {
