@@ -1,6 +1,6 @@
 [package]
 name = "wakatiwai"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
@@ -9,3 +9,13 @@ microjson = "0.1.6"
 spin = { version = "0.9.8", features = ["rwlock"] }
 uefi = { version = "0.28.0", features = ["alloc", "global_allocator"] }
 uefi-raw = "0.5.2"
+
+[profile.release]
+opt-level = "z"
+debug = false
+strip = "none"
+debug-assertions = false
+overflow-checks = true
+lto = true
+panic = "unwind"
+incremental = false

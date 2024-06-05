@@ -5,9 +5,10 @@ TEST_DIR=$PROJ_DIR/tests
 
 usage() {
 	cat << HELP_USAGE
-usage: wakatiwai.sh [-hl] <profile> [-r]
-	-h  --help        : Prints this message
-	-l  --list        : Lists profiles
+usage: wakatiwai.sh [-hlr] <profile>
+	-h  --help      : Prints this message
+	-l  --list      : Lists profiles
+	-r              : Build in release mode
 
 Licensed under GPLv3
 Copyright (C) 2024  Johann Scott
@@ -22,22 +23,41 @@ list_profiles() {
 	exit 0
 }
 
-PROFILE=$1
-if [ "$PROFILE" = "--help" ] || [ "$PROFILE" = "-h" ] || [ -z "$PROFILE" ]; then
-	usage
-elif [ "$PROFILE" = "--list" ] || [ "$PROFILE" = "-l" ]; then
-	list_profiles
-elif [ ! -f "$PROJ_DIR/tests/$PROFILE.json" ]; then
-	echo "No such profile or option \"$PROFILE\" found"
-	exit 1
-else
-	WTPROF="$PROJ_DIR/tests/$PROFILE.json"
-	echo "Building image for profile \"$PROFILE\"..."
-fi
+PROFILE=""
+RELEASE="dev"
+
+for param in "$@"; do
+	if [[ $param =~ "-" ]]; then
+		case $param in
+			"-h" | "--help")
+				usage
+				;;
+			"-l" | "--list")
+				list_profiles
+				;;
+			"-r" | "--release")
+				RELEASE="release"
+				;;
+			*)
+				echo "Unrecognised option \"$param\""
+				usage
+				;;
+		esac
+	else
+		PROFILE=$param
+		if [ ! -f "$PROJ_DIR/tests/$PROFILE.json" ]; then
+			echo "No such profile or option \"$PROFILE\" found"
+			exit 1
+		else
+			WTPROF="$PROJ_DIR/tests/$PROFILE.json"
+			echo "Building image for profile \"$PROFILE\"..."
+		fi
+	fi
+done
 
 # Build bootloader
 cd $PROJ_DIR
-cargo build
+cargo build --profile $RELEASE --out-dir ./out -Z unstable-options
 BUILD_ERR_CODE=$?
 if [ $BUILD_ERR_CODE -ne 0 ]; then
 	exit $BUILD_ERR_CODE
@@ -90,7 +110,7 @@ while read -r part; do
 		sudo mount $LOPT $MNTPT
 		
 		sudo mkdir -p $MNTPT/EFI/BOOT
-		sudo cp $PROJ_DIR/target/x86_64-unknown-uefi/debug/wakatiwai.efi $MNTPT/EFI/BOOT/BOOTX64.EFI
+		sudo cp $PROJ_DIR/out/wakatiwai.efi $MNTPT/EFI/BOOT/BOOTX64.EFI
 		jq ".config" $WTPROF > /tmp/wtconfig.json
 		sudo cp /tmp/wtconfig.json $MNTPT/wtconfig.json
 
