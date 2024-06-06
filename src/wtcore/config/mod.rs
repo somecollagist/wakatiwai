@@ -10,7 +10,7 @@ use core::fmt::Display;
 use core::str::FromStr;
 
 use spin::RwLock;
-use uefi::{cstr16, CStr16};
+use uefi::{cstr16, CStr16, Guid};
 
 /// The loaded configuration for the bootloader.
 pub static CONFIG: RwLock<Config> = RwLock::new(Config::new());
@@ -97,8 +97,7 @@ impl Display for Config {
 
 /// The logging levels to be used by the bootloader.
 /// These will determine which messages can and cannot be printed.
-#[derive(Debug, Default, Clone, PartialEq)]
-#[repr(u8)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum LogLevel {
     // Will produce no output bar critical failures
     SILENT,
@@ -114,13 +113,13 @@ pub enum LogLevel {
 impl FromStr for LogLevel {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return match s {
+        match s {
             "SILENT" => Ok(LogLevel::SILENT),
             "QUIET" => Ok(LogLevel::QUIET),
             "NORMAL" => Ok(LogLevel::NORMAL),
             "DEBUG" => Ok(LogLevel::DEBUG),
             _ => Ok(LogLevel::default()),
-        };
+        }
     }
 }
 
@@ -129,16 +128,27 @@ impl FromStr for LogLevel {
 pub struct BootEntry {
     /// The name of the boot option, displayed to the user.
     pub name: String,
-    // TODO: add a disk parameter
-    /// The partition on disk containing this boot option.
+    /// The GUID of the disk containing this boot option.
+    pub disk_guid: Guid,
+    /// The partition of the disk containing this boot option.
     pub partition: u32,
+    /// The type of file system upon which this boot option resides.
+    pub fs: FS,
+    /// The type of program this boot option points to.
+    pub progtype: Progtype
 }
 
 impl BootEntry {
     #[doc(hidden)]
     const KEY_NAME: &'static str = "name";
     #[doc(hidden)]
+    const KEY_DISK :&'static str = "diskguid";
+    #[doc(hidden)]
     const KEY_PARTITION: &'static str = "partition";
+    #[doc(hidden)]
+    const KEY_FS :&'static str = "fs";
+    #[doc(hidden)]
+    const KEY_PROGTYPE :&'static str = "progtype";
 
     /// The maximum name length for a boot entry.
     pub const MAX_NAME_LENGTH: usize = 64;
@@ -150,11 +160,57 @@ impl Display for BootEntry {
             f,
 "{{
     {name_key}: {name_val},
+    {disk_key}: {disk_val}
     {partition_key}: {partition_val}
+    {fs_key}: {fs_val:?}
+    {progtype_key}: {progtype_val:?}
 }}",
             name_key = BootEntry::KEY_NAME, name_val = self.name,
-            partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition
+            disk_key = BootEntry::KEY_DISK, disk_val = self.disk_guid,
+            partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition,
+            fs_key = BootEntry::KEY_FS, fs_val = self.fs,
+            progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype
         )
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum FS {
+    #[default]
+    UNKNOWN,
+    FAT12,
+    FAT16,
+    FAT32
+}
+
+impl FromStr for FS {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "fat12" => Ok(FS::FAT12),
+            "fat16" => Ok(FS::FAT16),
+            "fat32" => Ok(FS::FAT32),
+            _ => Ok(FS::default())
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum Progtype {
+    #[default]
+    UNKNOWN,
+    UEFI,
+    ELF
+}
+
+impl FromStr for Progtype {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "UEFI" => Ok(Progtype::UEFI),
+            "ELF" => Ok(Progtype::ELF),
+            _ => Ok(Progtype::default())
+        }
     }
 }
 

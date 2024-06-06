@@ -13,13 +13,15 @@
 	"config": {
 		"loglevel": "DEBUG",
 		"instantboot": false,
-		"menuclear": true,
-		"offershell": false,
+		"menuclear": false,
+		"offershell": true,
 		"editconfig": true,
 		"bootentries": [
 			{
 				"name": "Test",
-				"partition": 2
+				"partition": 2,
+				"fs": "fat32",
+				"progtype": "UEFI"
 			}
 		]
 	}

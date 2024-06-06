@@ -60,7 +60,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
             let bootentry = match parse_bootentry(bootentry_json) {
                 Ok(ok) => ok,
                 Err(err) => {
-                    eprintln!("Failed to parse config file: {}", err);
+                    eprintln!("Failed to parse boot entry: {}", err);
                     return Err(Status::ABORTED);
                 }
             };
@@ -107,11 +107,31 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
 
     // Get boot entry properties
     let name            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_NAME, String::from(""), true, JSONValueType::String));
+    let mut disk_guid   = unwrap_json_var!(get_json_var::<Guid>(&json, BootEntry::KEY_DISK, Guid::ZERO, false, JSONValueType::String));
     let partition       = unwrap_json_var!(get_json_var::<u32>(&json, BootEntry::KEY_PARTITION, 0, true, JSONValueType::Number));
+    let fs              = unwrap_json_var!(get_json_var::<FS>(&json, BootEntry::KEY_FS, FS::UNKNOWN, true, JSONValueType::String));
+    let progtype        = unwrap_json_var!(get_json_var::<Progtype>(&json, BootEntry::KEY_PROGTYPE, Progtype::UNKNOWN, true, JSONValueType::String));
+
+    if disk_guid == Guid::ZERO {
+        wprintln!("Disk property missing or malformed, assuming current...");
+        disk_guid = *blockdev::BOOTLOADER_DISK_GUID;
+    }
+
+    if fs == FS::UNKNOWN {
+        eprintln!("Unknown filesystem \"{}\" specified", json.get_key_value(BootEntry::KEY_FS).unwrap().read_string().unwrap());
+        return Err(Status::ABORTED);
+    }
+    if progtype == Progtype::UNKNOWN {
+        eprintln!("Unknown program type \"{}\" specified", json.get_key_value(BootEntry::KEY_PROGTYPE).unwrap().read_string().unwrap());
+        return Err(Status::ABORTED);
+    }
 
     Ok(BootEntry {
         name,
-        partition        
+        disk_guid,
+        partition,
+        fs,
+        progtype   
     })
 }
 
@@ -180,20 +200,38 @@ fn get_json_var<T: Default + Debug + FromStr + 'static>(json: &JSONValue, key: &
 
     // Input supported types here
     const BOOL_TYPE: TypeId         = TypeId::of::<bool>();
+    const FS_TYPE: TypeId           = TypeId::of::<FS>();
+    const GUID_TYPE: TypeId         = TypeId::of::<Guid>();
     const LOG_LEVEL_TYPE: TypeId    = TypeId::of::<LogLevel>();
+    const PROGTYPE_TYPE: TypeId     = TypeId::of::<Progtype>();
     const STRING_TYPE: TypeId       = TypeId::of::<String>();
     const U32_TYPE: TypeId          = TypeId::of::<u32>();
 
     // Describe how to deserialise to given types here
     set_on_types!(
-        (BOOL_TYPE,  {
+        (BOOL_TYPE, {
             T::from_str(
                 &value.read_boolean().unwrap().to_string()
             ).unwrap_unchecked()
         }),
+        (FS_TYPE, {
+            T::from_str(
+                &value.read_string().unwrap()
+            ).unwrap_unchecked()
+        }),
+        (GUID_TYPE, {
+            T::from_str(
+                &value.read_string().unwrap()
+            ).unwrap_or_else(|_| T::from_str(&Guid::ZERO.to_string()).unwrap_unchecked())
+        }),
         (LOG_LEVEL_TYPE, {
             T::from_str(
                 value.read_string().unwrap()
+            ).unwrap_unchecked()
+        }),
+        (PROGTYPE_TYPE, {
+            T::from_str(
+                &value.read_string().unwrap()
             ).unwrap_unchecked()
         }),
         (STRING_TYPE, {

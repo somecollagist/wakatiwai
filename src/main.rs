@@ -2,9 +2,12 @@
 #![no_main]
 #![feature(alloc_error_handler, const_option, const_type_id, panic_info_message, slice_split_once)]
 
+mod blockdev;
+mod boot;
 mod editor;
 mod wtcore;
 
+#[macro_use]
 extern crate alloc;
 use alloc::string::String;
 
@@ -12,8 +15,8 @@ use uefi::prelude::*;
 use uefi::proto::console::text::{Key, ScanCode};
 use uefi::table::runtime::ResetType;
 
+use boot::boot::attempt_boot;
 use write::write_config;
-use wtcore::boot::attempt_boot;
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
 use wtcore::menu::{BootMenu, MenuOption};
@@ -55,9 +58,18 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     let boot_option = BootMenu::select_option();
     match boot_option {
         MenuOption::BootOption(entry) => {
-            attempt_boot(&entry);
+            match attempt_boot(&entry) {
+                Some(some) => {
+                    eprintln!("Unable to boot: {:?}", some);
+                }
+                None => {}
+            };
         }
         MenuOption::UEFIShell => {
+            stdout!().set_color(
+                uefi::proto::console::text::Color::LightGray,
+                uefi::proto::console::text::Color::Black
+            ).unwrap();
             return Status::ABORTED;
         }
         MenuOption::EditConfig => {

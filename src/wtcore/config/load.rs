@@ -24,7 +24,10 @@ pub fn read_config() -> Result<Vec<u8>, Status> {
     // Attempt to get the file system containing the bootloader - the config file should be in the same file system
     let mut efifs = match system_table.boot_services().get_image_file_system(image_handle!()) {
         Ok(ok) => FileSystem::new(ok),
-        Err(err) => return Err(err.status()),
+        Err(err) => {
+            eprintln!("Unable to read image file system");
+            return Err(err.status());
+        }
     };
 
     // Check if the config file exists - this ONLY checks if a directory entry exists at the path
