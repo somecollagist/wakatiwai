@@ -4,7 +4,8 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
-use uefi::{proto::console::text::Color, CStr16};
+use uefi::proto::console::text::Color;
+use uefi::CStr16;
 
 use crate::*;
 

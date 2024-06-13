@@ -1,16 +1,18 @@
-pub mod device;
 pub mod mbr;
 pub mod gpt;
+pub mod reader;
 
 extern crate alloc;
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
+use reader::DiskReader;
 use spin::Lazy;
+use uefi::proto::media::disk::DiskIo;
+use uefi::table::boot::SearchType::*;
+use uefi::table::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol};
 use uefi::{Guid, Handle};
-use uefi::proto::media::block::BlockIO;
-use uefi::table::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol, SearchType::*};
 use uefi_raw::protocol::*;
 
 use crate::{dprintln, eprintln, image_handle, system_table};
@@ -25,11 +27,11 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
     for device_handle in device_handles.iter() {
         dprintln!("Opening device handle {:#010x}", device_handle.as_ptr() as u64);
         
-        // Attempt to open a BlockIO protocol on this device, continue if unable to do so
-        let protocol: ScopedProtocol<BlockIO>;
+        // Attempt to open a DiskIo protocol on this device, continue if unable to do so
+        let protocol: ScopedProtocol<DiskIo>;
         unsafe {
             // Cannot open as exclusive otherwise crashes
-            match st.boot_services().open_protocol::<BlockIO>(
+            match st.boot_services().open_protocol::<DiskIo>(
                 OpenProtocolParams {
                     handle: *device_handle,
                     agent: image_handle!(),
@@ -41,14 +43,16 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
                     protocol = ok;
                 }
                 Err(err) => {
-                    dprintln!("Unable to open BlockIO protocol on device handle {:#010x}: {:?}", device_handle.as_ptr() as u64, err.status());
+                    dprintln!("Unable to open DiskIO protocol on device handle {:#010x}: {:?}", device_handle.as_ptr() as u64, err.status());
                     continue;
                 }
             }
         }
 
+        let reader = DiskReader::new(device_handle, &protocol, 0);
+
         // Attempt to read a GPT, push its GUID and the current handle if it exists, otherwise continue
-        match gpt::GPT::read_gpt(&protocol) {
+        match gpt::GPT::read_gpt(&reader) {
             Ok(ok) => {
                 disk_guid_handle_mapping.insert(
                     ok.header.disk_guid,
@@ -56,7 +60,7 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
                 );
             }
             Err(err) => {
-                dprintln!("Unable to read current disk GPT on media {}: {:?}", protocol.media().media_id(), err);
+                dprintln!("Unable to read current disk GPT on media {}: {:?}", reader.media_id, err);
             }
         }
     }

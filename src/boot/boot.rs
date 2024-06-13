@@ -1,13 +1,16 @@
 use core::ffi::c_void;
 
-use gpt::GPTEntry;
-use uefi::proto::media::block::BlockIO;
+use alloc::vec::Vec;
+use uefi::proto::media::disk::DiskIo;
 use uefi::table::boot::ScopedProtocol;
 use uefi::{Handle, Status};
 
-use crate::{blockdev::*, system_table};
-use crate::{dprintln, println};
+use crate::dev::reader::DiskReader;
+use crate::dev::DISK_GUID_HANDLE_MAPPING;
+use crate::dev::gpt::GPT;
+use crate::fs::{self, FileSystem};
 use crate::wtcore::config::BootEntry;
+use crate::{dprintln, println, system_table};
 
 /// Possible failures that may occur when trying to boot a given entry.
 #[derive(Debug)]
@@ -15,12 +18,14 @@ use crate::wtcore::config::BootEntry;
 pub enum BootFailure {
     /// The specified disk could not be found.
     NoSuchDisk,
-    /// A BlockIO protocol to the disk could not be opened.
-    DiskBlockIOProtocolFailure(Status),
+    /// A DiskIO protocol to the disk could not be opened.
+    DiskIOProtocolFailure(Status),
     /// The disk's GPT could not be read successfully.
     BadGPT(Status),
     /// The specified partition does not exist on disk.
-    NoSuchPartition
+    NoSuchPartition,
+    /// The file system was unknown.
+    UnknownFS
 }
 
 /// Attempts to boot to a given entry.
@@ -30,6 +35,7 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
     dprintln!("{}", entry);
     let st = system_table!();
 
+    // Get a handle to the disk
     let disk_handle: Handle;
     match DISK_GUID_HANDLE_MAPPING.get(&entry.disk_guid) {
         Some(some) => {
@@ -40,18 +46,20 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
         }
     }
 
-    let disk_block_io_protocol: ScopedProtocol<BlockIO>;
-    match st.boot_services().open_protocol_exclusive::<BlockIO>(disk_handle) {
+    let protocol: ScopedProtocol<DiskIo>;
+    match st.boot_services().open_protocol_exclusive::<DiskIo>(disk_handle) {
         Ok(ok) => {
-            disk_block_io_protocol = ok;
+            protocol = ok;
         }
         Err(err) => {
-            return Some(BootFailure::DiskBlockIOProtocolFailure(err.status()));
+            return Some(BootFailure::DiskIOProtocolFailure(err.status()));
         }
     }
 
-    let disk_gpt: gpt::GPT;
-    match gpt::GPT::read_gpt(&disk_block_io_protocol) {
+    let mut reader = DiskReader::new(&disk_handle, &protocol, 0);
+
+    let disk_gpt: GPT;
+    match GPT::read_gpt(&reader) {
         Ok(ok) => {
             disk_gpt = ok;
         }
@@ -60,15 +68,25 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
         }
     }
 
-    let partition: GPTEntry;
+    let filesystem: FileSystem;
     match disk_gpt.entries.get((entry.partition-1) as usize) {
         Some(some) => {
-            partition = some.clone();
+            reader.abs_offset = some.starting_lba * reader.block_size as u64;
+            match fs::FileSystem::new_filesystem(entry.fs.clone(), &reader) {
+                Some(some) => {
+                    filesystem = some;
+                }
+                None => {
+                    return Some(BootFailure::UnknownFS);
+                }
+            }
         }
         None => {
             return Some(BootFailure::NoSuchPartition);
         }
     }
+
+    dprintln!("{:?}", filesystem.load_file("/tests/core/image_fdisk.sh").unwrap().iter().map(|t| *t as char).collect::<Vec<char>>());
 
     None
 }

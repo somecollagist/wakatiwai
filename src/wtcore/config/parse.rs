@@ -5,12 +5,12 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::{type_name, TypeId};
 use core::fmt::Debug;
-use core::str::FromStr;
 
 use microjson::*;
 use uefi::prelude::*;
 
 use crate::*;
+use crate::wtcore::*;
 use crate::wtcore::config::*;
 
 #[doc(hidden)]
@@ -114,7 +114,7 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
 
     if disk_guid == Guid::ZERO {
         wprintln!("Disk property missing or malformed, assuming current...");
-        disk_guid = *blockdev::BOOTLOADER_DISK_GUID;
+        disk_guid = *dev::BOOTLOADER_DISK_GUID;
     }
 
     if fs == FS::UNKNOWN {

@@ -147,6 +147,18 @@ while read -r part; do
 		if [ $FS_TYPE != "swap" ]; then # swaps need swapon but are volatile so no point populating
 			sudo mount $LOPT $MNTPT
 		fi
+
+		content=$(echo $part | jq -c ".content[]") >> /dev/null
+		if [ $? -eq 0 ]; then
+			for content_pair in $content; do
+				from=$(echo $content_pair | jq ".from" | tr -d '"') >> /dev/null
+				to=$(echo $content_pair | jq ".to" | tr -d '"') >> /dev/null
+				to=$(realpath $(dirname "$MNTPT""$to"))
+				echo "Copying $from to $to"
+				sudo mkdir -p $to
+				sudo cp -r $from $to
+			done
+		fi
 	fi
 
 	if [ $FS_TYPE != "swap" ]; then # as above, would be swapoff if needed

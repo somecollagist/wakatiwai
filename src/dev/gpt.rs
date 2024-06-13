@@ -6,12 +6,10 @@ use core::mem::size_of;
 
 use crc::*;
 use uefi::{Char16, Guid, Status};
-use uefi::proto::media::block::BlockIO;
-use uefi::table::boot::ScopedProtocol;
 
 use crate::dprintln;
-use super::device::{read_block, read_blocks};
 use super::mbr::MBR;
+use super::reader::DiskReader;
 
 /// A structure describing the GUID Partition Table (GPT).
 #[derive(Debug)]
@@ -30,10 +28,10 @@ pub struct GPT {
 
 impl GPT {
     /// Reads the GPT from a disk.
-    pub fn read_gpt(protocol: &ScopedProtocol<BlockIO>) -> Result<Self, Status> {
+    pub fn read_gpt(reader: &DiskReader) -> Result<Self, Status> {
         // Read the PMBR
         let pmbr: MBR;
-        match MBR::read_mbr(protocol) {
+        match MBR::read_mbr(reader) {
             Ok(ok) => {
                 pmbr = ok;
             }
@@ -44,7 +42,7 @@ impl GPT {
     
         // Read the headers
         let (header, alt_header): (GPTHeader, GPTHeader);
-        match read_block(protocol, 1) {
+        match reader.read_block(1) {
             Ok(ok) => unsafe {
                 header = *(ok[0..size_of::<GPTHeader>()].as_ptr() as *const GPTHeader);
 
@@ -57,7 +55,7 @@ impl GPT {
                 return Err(err);
             }
         }
-        match read_block(protocol, protocol.media().last_block()) {
+        match reader.read_block(reader.last_block){
             Ok(ok) => unsafe {
                 alt_header = *(ok[0..size_of::<GPTHeader>()].as_ptr() as *const GPTHeader);
 
@@ -73,7 +71,7 @@ impl GPT {
 
         // Read the entries
         let (entries, alt_entries): (Vec<GPTEntry>, Vec<GPTEntry>);
-        match header.get_entries(protocol) {
+        match header.get_entries(reader) {
             Ok(ok) => {
                 entries = ok;
             }
@@ -82,7 +80,7 @@ impl GPT {
                 return Err(err);
             }
         }
-        match alt_header.get_entries(protocol) {
+        match alt_header.get_entries(reader) {
             Ok(ok) => {
                 alt_entries = ok;
             }
@@ -238,15 +236,14 @@ impl GPTHeader {
     }
 
     /// Obtains all of the entries pointed to by a GPT Header.
-    fn get_entries(&self, protocol: &ScopedProtocol<BlockIO>) -> Result<Vec<GPTEntry>, Status> {
+    fn get_entries(&self, reader: &DiskReader) -> Result<Vec<GPTEntry>, Status> {
         let mut ret = Vec::<GPTEntry>::new();
 
         // Read all the blocks that contain the GPT entries
         let partition_entry_array_bytes: Vec<u8>;
-        match read_blocks(
-            protocol,
+        match reader.read_blocks(
             self.entry_array_starting_lba,
-            ((self.entry_size * self.entry_count) / protocol.media().block_size() & !protocol.media().block_size()) as u64
+            ((self.entry_size * self.entry_count) / reader.block_size & !reader.block_size) as usize
         ) {
             Ok(ok) => {
                 partition_entry_array_bytes = ok;

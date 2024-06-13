@@ -12,6 +12,8 @@ use core::str::FromStr;
 use spin::RwLock;
 use uefi::{cstr16, CStr16, Guid};
 
+use crate::wtcore::*;
+
 /// The loaded configuration for the bootloader.
 pub static CONFIG: RwLock<Config> = RwLock::new(Config::new());
 
@@ -171,46 +173,6 @@ impl Display for BootEntry {
             fs_key = BootEntry::KEY_FS, fs_val = self.fs,
             progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype
         )
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub enum FS {
-    #[default]
-    UNKNOWN,
-    FAT12,
-    FAT16,
-    FAT32
-}
-
-impl FromStr for FS {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "fat12" => Ok(FS::FAT12),
-            "fat16" => Ok(FS::FAT16),
-            "fat32" => Ok(FS::FAT32),
-            _ => Ok(FS::default())
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub enum Progtype {
-    #[default]
-    UNKNOWN,
-    UEFI,
-    ELF
-}
-
-impl FromStr for Progtype {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "UEFI" => Ok(Progtype::UEFI),
-            "ELF" => Ok(Progtype::ELF),
-            _ => Ok(Progtype::default())
-        }
     }
 }
 

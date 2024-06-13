@@ -1,17 +1,16 @@
 use core::mem::size_of;
 
-use uefi::proto::media::block::BlockIO;
 use uefi::Status;
-use uefi::table::boot::ScopedProtocol;
 
 use crate::dprintln;
+use super::reader::DiskReader;
 
 /// A structure describing the Master Boot Record (MBR).
 #[derive(Clone, Copy, Debug,)]
 #[repr(C, packed)]
 pub struct MBR {
     /// x86 code used on a non-UEFI system to select an MBR partition and load the first logical block of that partition. Unused on UEFI systems.
-    bootstrap: [u8; 440],
+    boot_code: [u8; 440],
     /// A unique disk signature which may be used by the OS to identify disks.
     pub disk_signature: u32,
     #[doc(hidden)]
@@ -27,9 +26,9 @@ impl MBR {
     const MBR_SIGNATURE: u16 = 0xAA55;
 
     /// Reads the MBR from a disk.
-    pub fn read_mbr(protocol: &ScopedProtocol<BlockIO>) -> Result<Self, Status> {
+    pub fn read_mbr(reader: &DiskReader) -> Result<Self, Status> {
         let ret: MBR;
-        match super::device::read_block(protocol, 0) {
+        match reader.read_block(0) {
             Ok(ok) => unsafe {
                 ret = *(ok[0..size_of::<MBR>()].as_ptr() as *const MBR);
             },

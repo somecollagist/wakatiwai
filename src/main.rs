@@ -1,10 +1,19 @@
 #![no_std]
 #![no_main]
-#![feature(alloc_error_handler, const_option, const_type_id, panic_info_message, slice_split_once)]
+#![feature(
+    alloc_error_handler,
+    const_option,
+    const_type_id,
+    iter_advance_by,
+    panic_info_message,
+    slice_split_once,
+    trait_upcasting
+)]
 
-mod blockdev;
+mod dev;
 mod boot;
 mod editor;
+mod fs;
 mod wtcore;
 
 #[macro_use]
@@ -16,9 +25,9 @@ use uefi::proto::console::text::{Key, ScanCode};
 use uefi::table::runtime::ResetType;
 
 use boot::boot::attempt_boot;
-use write::write_config;
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
+use wtcore::config::write::write_config;
 use wtcore::menu::{BootMenu, MenuOption};
 
 /// Entry point for the Wakatiwai bootloader.

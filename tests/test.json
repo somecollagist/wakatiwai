@@ -7,7 +7,17 @@
 		{
 			"type": "20",
 			"size": "32M",
-			"fs": "fat16"
+			"fs": "fat12",
+			"content": [
+				{
+					"from": "./tests",
+					"to": "/tests"
+				},
+				{
+					"from": "./README.md",
+					"to": "/README.md"
+				}
+			]
 		}
 	],
 	"config": {
@@ -20,7 +30,7 @@
 			{
 				"name": "Test",
 				"partition": 2,
-				"fs": "fat32",
+				"fs": "fat12",
 				"progtype": "UEFI"
 			}
 		]

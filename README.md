@@ -48,7 +48,7 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |Property|Type|Default|Required|Notes|
 |---|---|---|---|---|
 |`name`|String|N/A|✔|The name of the boot entry.<br><br>**N.B. This name should be no longer than 64 characters.**|
-|`diskguid`|String|`""`|✘|The GUID of the GPT of the disk upon which this boot option resides. If empty, the bootloader will assume that this boot option occupies the same disk (ergo GPT) as itself.|
+|`diskguid`|String|The Bootloader's disk GUID.|✘|The GUID of the GPT of the disk upon which this boot option resides.|
 |`partition`|Integer|N/A|✔|The partition in which this boot option resides.|
 |`fs`|String|N/A|✔|The file system of the given partition. A list of supported filesystems (case sensitive, in quotes) can be found [here](#supported-filesystems).|
 |`progtype`|String|N/A|✔|The type of program this boot entry points to. Options are: <ul><li>`"UEFI"` (Boot entry runs a UEFI program)</li><li>`"ELF"` (Boot entry runs an ELF executable)</li></ul>|
