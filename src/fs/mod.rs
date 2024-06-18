@@ -12,7 +12,6 @@ use crate::eprintln;
 #[derive(Debug)]
 pub enum FileSystemOperationError {
     ReadDirectoryAsFile,
-    ReadFileAsDirectory,
     NonAbsolutePath,
     FileNotFound
 }

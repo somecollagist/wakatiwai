@@ -31,7 +31,8 @@
 				"name": "Test",
 				"partition": 2,
 				"fs": "fat12",
-				"progtype": "UEFI"
+				"progtype": "UEFI",
+				"path": "/tests/test.json"
 			}
 		]
 	}

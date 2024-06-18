@@ -62,7 +62,7 @@ pub struct DirectoryEntryMetadata {
     modified_time: fat::Time,
     modified_date: fat::Date,
     pub first_cluster: u16,
-    size: u32
+    pub file_size: u32
 }
 
 impl DirectoryEntryMetadata {

@@ -1,5 +1,6 @@
 use core::ffi::c_void;
 
+use alloc::string::String;
 use alloc::vec::Vec;
 use uefi::proto::media::disk::DiskIo;
 use uefi::table::boot::ScopedProtocol;
@@ -8,7 +9,7 @@ use uefi::{Handle, Status};
 use crate::dev::reader::DiskReader;
 use crate::dev::DISK_GUID_HANDLE_MAPPING;
 use crate::dev::gpt::GPT;
-use crate::fs::{self, FileSystem};
+use crate::fs::{self, FileSystem, FileSystemOperationError};
 use crate::wtcore::config::BootEntry;
 use crate::{dprintln, println, system_table};
 
@@ -25,7 +26,9 @@ pub enum BootFailure {
     /// The specified partition does not exist on disk.
     NoSuchPartition,
     /// The file system was unknown.
-    UnknownFS
+    UnknownFS,
+    /// An error was encountered in reading the boot path.
+    FSError(FileSystemOperationError)
 }
 
 /// Attempts to boot to a given entry.
@@ -86,7 +89,17 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
         }
     }
 
-    dprintln!("{:?}", filesystem.load_file("/tests/core/image_fdisk.sh").unwrap().iter().map(|t| *t as char).collect::<Vec<char>>());
+    let boot_payload: Vec<u8>;
+    match filesystem.load_file(&entry.path) {
+        Ok(ok) => {
+            boot_payload = ok;
+        }
+        Err(err) => {
+            return Some(BootFailure::FSError(err));
+        }
+    }
+
+    println!("{}", String::from_utf8(boot_payload).unwrap());
 
     None
 }

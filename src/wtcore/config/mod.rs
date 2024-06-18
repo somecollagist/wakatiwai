@@ -137,20 +137,24 @@ pub struct BootEntry {
     /// The type of file system upon which this boot option resides.
     pub fs: FS,
     /// The type of program this boot option points to.
-    pub progtype: Progtype
+    pub progtype: Progtype,
+    /// The path of the boot option to be run.
+    pub path: String
 }
 
 impl BootEntry {
     #[doc(hidden)]
     const KEY_NAME: &'static str = "name";
     #[doc(hidden)]
-    const KEY_DISK :&'static str = "diskguid";
+    const KEY_DISK: &'static str = "diskguid";
     #[doc(hidden)]
     const KEY_PARTITION: &'static str = "partition";
     #[doc(hidden)]
-    const KEY_FS :&'static str = "fs";
+    const KEY_FS: &'static str = "fs";
     #[doc(hidden)]
-    const KEY_PROGTYPE :&'static str = "progtype";
+    const KEY_PROGTYPE: &'static str = "progtype";
+    #[doc(hidden)]
+    const KEY_PATH: &'static str = "path";
 
     /// The maximum name length for a boot entry.
     pub const MAX_NAME_LENGTH: usize = 64;
@@ -166,12 +170,14 @@ impl Display for BootEntry {
     {partition_key}: {partition_val}
     {fs_key}: {fs_val:?}
     {progtype_key}: {progtype_val:?}
+    {path_key}: {path_val:?}
 }}",
             name_key = BootEntry::KEY_NAME, name_val = self.name,
             disk_key = BootEntry::KEY_DISK, disk_val = self.disk_guid,
             partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition,
             fs_key = BootEntry::KEY_FS, fs_val = self.fs,
-            progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype
+            progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype,
+            path_key = BootEntry::KEY_PATH, path_val = self.path
         )
     }
 }
