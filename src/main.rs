@@ -24,7 +24,7 @@ use uefi::prelude::*;
 use uefi::proto::console::text::{Key, ScanCode};
 use uefi::table::runtime::ResetType;
 
-use boot::boot::attempt_boot;
+use boot::attempt_boot;
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
 use wtcore::config::write::write_config;

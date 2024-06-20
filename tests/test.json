@@ -7,15 +7,15 @@
 		{
 			"type": "20",
 			"size": "32M",
-			"fs": "fat12",
+			"fs": "fat16",
 			"content": [
-				{
-					"from": "./tests",
-					"to": "/tests"
-				},
 				{
 					"from": "./README.md",
 					"to": "/README.md"
+				},
+				{
+					"from": "./tests/hello-uefi.efi",
+					"to": "/tests/hello-uefi.efi"
 				}
 			]
 		}
@@ -30,9 +30,9 @@
 			{
 				"name": "Test",
 				"partition": 2,
-				"fs": "fat12",
+				"fs": "fat16",
 				"progtype": "UEFI",
-				"path": "/tests/test.json"
+				"path": "/tests/hello-uefi.efi"
 			}
 		]
 	}
