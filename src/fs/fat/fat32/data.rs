@@ -1,5 +1,6 @@
 extern crate alloc;
 
+use alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use uefi::{CStr16, CString16, Char16};
@@ -15,7 +16,18 @@ pub struct DirectoryEntry {
 impl DirectoryEntry {
     pub fn name(&self) -> String {
         if self.long_name.len() == 0 {
-            return unsafe { String::from_utf8_unchecked(self.metadata.name.to_vec()) }
+            unsafe {
+                return if self.metadata.extension != [0x20, 0x20, 0x20] { // If the extension isn't just spaces
+                    format!(
+                        "{}.{}",
+                        String::from_utf8_unchecked(self.metadata.name.to_vec()).trim(),
+                        String::from_utf8_unchecked(self.metadata.extension.to_vec()).trim()
+                    )
+                }
+                else {
+                    String::from_utf8_unchecked(self.metadata.name.to_vec()).trim().to_owned()
+                }
+            }
         }
         
         let mut name_builder = Vec::new();
@@ -59,10 +71,10 @@ pub struct DirectoryEntryMetadata {
     creation_time: fat::Time,
     creation_date: fat::Date,
     accessed_date: fat::Date,
-    zero: u16,
+    first_cluster_high: u16,
     modified_time: fat::Time,
     modified_date: fat::Date,
-    pub first_cluster: u16,
+    first_cluster_low: u16,
     pub file_size: u32
 }
 
@@ -74,6 +86,10 @@ impl DirectoryEntryMetadata {
     const ATTRIBUTE_DIRECTORY: u8   = 0x10;
     const ATTRIBUTE_ARCHIVE: u8     = 0x20;
     const ATTRIBUTE_LFN: u8         = 0x0F;
+
+    pub fn first_cluster(&self) -> u32 {
+        (self.first_cluster_high as u32) << 16 | (self.first_cluster_low as u32)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default)]

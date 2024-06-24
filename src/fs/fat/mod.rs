@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 pub mod fat12_16;
+pub mod fat32;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Time(u16);

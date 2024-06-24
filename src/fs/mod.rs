@@ -28,12 +28,13 @@ pub struct FileSystem<'fs>{
 impl FileSystem<'_> {
     pub fn new_filesystem<'fs>(fs: FS, reader: &'fs DiskReader) -> Option<FileSystem<'fs>> {
         let backing: Box<dyn FileSystemAPI> = match fs {
-            FS::FAT12 | FS::FAT16 => Box::new(fat::fat12_16::FAT12_16::new(reader, fs)),
+            FS::FAT12 | FS::FAT16 => Box::new(fat::fat12_16::FAT12_16::new(reader, fs)) as Box<dyn FileSystemAPI>,
+            FS::FAT32 => Box::new(fat::fat32::FAT32::new(reader)) as Box<dyn FileSystemAPI>,
             _ => {
                 eprintln!("Cannot create backing in-memory filesystem for type \"{:?}\"", fs);
                 return None;
             }
-        } as Box<dyn FileSystemAPI>;
+        };
 
         Some(FileSystem {
             backing,

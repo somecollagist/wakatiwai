@@ -7,7 +7,7 @@
 		{
 			"type": "20",
 			"size": "32M",
-			"fs": "fat16",
+			"fs": "fat32",
 			"content": [
 				{
 					"from": "./README.md",
@@ -30,7 +30,7 @@
 			{
 				"name": "Test",
 				"partition": 2,
-				"fs": "fat16",
+				"fs": "fat32",
 				"progtype": "UEFI",
 				"path": "/tests/hello-uefi.efi"
 			}

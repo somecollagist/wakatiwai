@@ -1,5 +1,5 @@
-mod disk;
 mod data;
+mod disk;
 
 extern crate alloc;
 
@@ -7,35 +7,42 @@ use alloc::vec::Vec;
 use core::mem::size_of;
 use core::slice::from_raw_parts;
 
-use crate::fs::*;
+use crate::dev::reader::DiskReader;
+use crate::fs::{FileSystemAPI, FileSystemOperationError};
 use crate::wprintln;
+use crate::dprintln;
 
-pub struct FAT12_16 {
+pub struct FAT32 {
     bpb: disk::BPB,
     ebpb: disk::EBPB,
-    fstype: FS,
+    fsinfo: disk::FSInfo,
     root_dir: Vec<data::DirectoryEntry>
 }
 
-impl FAT12_16 {
-    pub fn new(reader: &DiskReader, fstype: FS) -> Self {
+impl FAT32 {
+    pub fn new(reader: &DiskReader) -> Self {
         let boot_record_buffer = reader.read_sector(0).unwrap();
-
-        let mut ret = unsafe {
-            Self {
-                bpb: *(boot_record_buffer[0..size_of::<disk::BPB>()].as_ptr() as *const disk::BPB),
-                ebpb: *(boot_record_buffer[size_of::<disk::BPB>()..size_of::<disk::BPB>()+size_of::<disk::EBPB>()].as_ptr() as *const disk::EBPB),
-                fstype,
-                root_dir: Vec::new()
-            }
-        };
+        let bpb = unsafe { *(boot_record_buffer[0..size_of::<disk::BPB>()].as_ptr() as *const disk::BPB) };
+        let ebpb = unsafe { *(boot_record_buffer[size_of::<disk::BPB>()..size_of::<disk::BPB>()+size_of::<disk::EBPB>()].as_ptr() as *const disk::EBPB) };
         drop(boot_record_buffer);
-        
-        let root_dir_buffer = reader.read_sectors(ret.first_data_sector() - ret.root_dir_sectors(), ret.root_dir_sectors() as usize).unwrap();
+
+        let fsinfo_buffer = reader.read_sector(ebpb.fsinfo_sector as u64).unwrap();
+        let fsinfo = unsafe { *(fsinfo_buffer[0..size_of::<disk::FSInfo>()].as_ptr() as *const disk::FSInfo) };
+        drop(fsinfo_buffer);
+
+        let mut ret = Self {
+            bpb,
+            ebpb,
+            fsinfo,
+            root_dir: Vec::new()
+        };
+
+        let root_dir_buffer = ret.read_cluster_chain(reader, ebpb.root_dir_cluster);
         ret.root_dir = ret.read_dir_raw(&root_dir_buffer);
 
         ret
     }
+
 
     fn total_sectors(&self) -> u64 {
         if self.bpb.small_sector_count == 0 {
@@ -46,8 +53,8 @@ impl FAT12_16 {
         }
     }
 
-    fn fat_size(&self) -> u16 {
-        self.bpb.sectors_per_fat
+    fn fat_size(&self) -> u32 {
+        self.ebpb.sectors_per_fat
     }
 
     fn root_dir_sectors(&self) -> u64 {
@@ -59,7 +66,7 @@ impl FAT12_16 {
     }
 
     fn first_data_sector(&self) -> u64 {
-        self.first_fat_sector() + (self.bpb.table_count as u16 * self.fat_size()) as u64 + self.root_dir_sectors()
+        self.first_fat_sector() + (self.bpb.table_count as u32 * self.fat_size()) as u64 + self.root_dir_sectors()
     }
 
     fn data_sectors(&self) -> u64 {
@@ -70,85 +77,46 @@ impl FAT12_16 {
         self.data_sectors() / self.bpb.sectors_per_cluster as u64
     }
 
-    fn get_next_cluster(&self, reader: &DiskReader, cluster: u16) -> Option<u16> {
+    fn get_next_cluster(&self, reader: &DiskReader, cluster: u32) -> Option<u32> {
         if cluster == 0 || cluster == 1 {
             wprintln!("Origin cluster is reserved");
             return None;
         }
 
-        let mut table_value: u16;
-        if self.fstype == FS::FAT12 {
-            // FAT12
-            table_value = u16::from_le_bytes(
-                reader.read_bytes(
-                    (self.first_fat_sector() * reader.sector_size as u64) + (cluster + (cluster / 2)) as u64,
-                    size_of::<u16>()
-                ).unwrap().try_into().unwrap()
-            );
-            table_value = if cluster & 0x01 == 1 { table_value >> 4 } else { table_value & 0xFFF};
+        let table_value = u32::from_le_bytes(
+            reader.read_bytes(
+                (self.first_fat_sector() * reader.sector_size as u64) + (cluster as u64 * 4),
+                size_of::<u32>()
+            ).unwrap().try_into().unwrap()
+        ) & 0x0FFFFFFF;
 
-            match table_value {
-                0xFF7 => {
-                    // Bad cluster
-                    wprintln!("Bad cluster");
-                    return None;
-                },
-                0xFF8..=u16::MAX => {
-                    // End of cluster chain
-                    return None;
-                },
-                0x000 => {
-                    // Free cluster
-                    wprintln!("Free cluster");
-                    return None;
-                },
-                0x001 => {
-                    // Reserved cluster
-                    wprintln!("Reserved cluster");
-                    return None;
-                },
-                _ => {
-                    return Some(table_value);
-                }
+        match table_value {
+            0x0FFFFFF7 => {
+                // Bad cluster
+                wprintln!("Bad cluster");
+                return None;
+            },
+            0x0FFFFFF8..=u32::MAX => {
+                // End of cluster chain
+                return None;
+            },
+            0x00000000 => {
+                // Free cluster
+                wprintln!("Free cluster");
+                return None;
+            },
+            0x00000001 => {
+                // Reserved cluster
+                wprintln!("Reserved cluster");
+                return None;
+            },
+            _ => {
+                return Some(table_value);
             }
         }
-        else {
-            // FAT16
-            table_value = u16::from_le_bytes(
-                reader.read_bytes(
-                    (self.first_fat_sector() * reader.sector_size as u64) + (cluster as u64 * 2),
-                    size_of::<u16>()
-                ).unwrap().try_into().unwrap()
-            );
-
-            match table_value {
-                0xFFF7 => {
-                    // Bad cluster
-                    wprintln!("Bad cluster");
-                    return None;
-                },
-                0xFFF8..=u16::MAX => {
-                    // End of cluster chain
-                    return None;
-                },
-                0x000 => {
-                    // Free cluster
-                    wprintln!("Free cluster");
-                    return None;
-                },
-                0x001 => {
-                    // Reserved cluster
-                    wprintln!("Reserved cluster");
-                    return None;
-                },
-                _ => {
-                    return Some(table_value);
-                }
-            }
-        }  
     }
 
-    fn read_cluster_chain(&self, reader: &DiskReader, starting_cluster: u16) -> Vec<u8> {
+    fn read_cluster_chain(&self, reader: &DiskReader, starting_cluster: u32) -> Vec<u8> {
         let mut buffer = Vec::new();
         let mut cluster = starting_cluster;
         loop {
@@ -222,7 +190,7 @@ impl FAT12_16 {
     }
 }
 
-impl FileSystemAPI for FAT12_16 {
+impl FileSystemAPI for FAT32 {
     fn load_file(&self, path: &str, reader: &DiskReader) -> Result<Vec<u8>, FileSystemOperationError> {
         let mut dir_levels: Vec<&str> = path.split("/").collect();
         dir_levels.remove(0); // remove leading root dir qualifier
@@ -230,14 +198,14 @@ impl FileSystemAPI for FAT12_16 {
         
         let mut dir_entries = self.root_dir.clone();
         for dir_level in dir_levels {
-            match dir_entries.iter().find(|t| &t.name() == dir_level) {
+            match dir_entries.iter().find(|t| &t.name() == dir_level ) {
                 Some(some) => {
                     if !some.is_directory() {
                         return Err(FileSystemOperationError::FileNotFound);
                     }
 
                     dir_entries = self.read_dir_raw(
-                        &self.read_cluster_chain(reader, some.metadata.first_cluster)
+                        &self.read_cluster_chain(reader, some.metadata.first_cluster())
                     );
                 }
                 None => {
@@ -246,14 +214,16 @@ impl FileSystemAPI for FAT12_16 {
             }
         }
 
-        match dir_entries.iter().find(|t| &t.name() == file_name) {
+        match dir_entries.iter().find(|t| &t.name() == file_name ) {
             Some(some) => {
                 if !some.is_file() {
                     return Err(FileSystemOperationError::ReadDirectoryAsFile);
                 }
 
-                let mut ret = self.read_cluster_chain(reader, some.metadata.first_cluster);
+                dprintln!("Found target file");
+                let mut ret = self.read_cluster_chain(reader, some.metadata.first_cluster());
                 ret.truncate(some.metadata.file_size as usize);
+                dprintln!("Read and truncated");
                 return Ok(ret.to_vec());
             }
             None => {

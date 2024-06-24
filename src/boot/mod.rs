@@ -11,7 +11,7 @@ use crate::dev::reader::DiskReader;
 use crate::dev::DISK_GUID_HANDLE_MAPPING;
 use crate::fs::{FileSystem, FileSystemOperationError};
 use crate::wtcore::Progtype::*;
-use crate::{dprintln, image_handle, print, println, stdout, system_table, BootEntry};
+use crate::{dprintln, image_handle, print, println, system_table, BootEntry};
 
 /// Possible failures that may occur when trying to boot a given entry.
 #[derive(Debug)]
