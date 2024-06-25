@@ -6,9 +6,9 @@ use crate::eprintln_force;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     eprintln_force!(
-        "[PANIC] @ {}: {}",
-        info.location().unwrap(),
-        info.message().unwrap()
+        "[PANIC] @ {:?}: {:?}",
+        info.location(),
+        info.message()
     );
 
     loop {}
