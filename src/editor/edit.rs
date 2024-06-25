@@ -19,7 +19,6 @@ impl super::Editor {
 
         loop {
             // Loop for a key press
-            stdin!().reset(false).unwrap();
             boot_services!()
                 .wait_for_event(
                     [
