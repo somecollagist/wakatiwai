@@ -22,8 +22,8 @@ pub static CONFIG: RwLock<Config> = RwLock::new(Config::new());
 pub struct Config {
     /// The log level to be used. This value determines which kinds of messages can be printed to the screen.
     pub log_level: LogLevel,
-    /// Determines if the default boot option should be booted immediately.
-    pub instant_boot: bool,
+    /// Determines how long to wait without input before booting the default boot option.
+    pub timeout: i32,
     /// Determines if the option to exit the bootloader should be offered.
     pub exit: bool,
     /// Determines if the option to edit the bootloader configuration file should be offered.
@@ -38,7 +38,7 @@ impl Config {
     #[doc(hidden)]
     const KEY_LOG_LEVEL: &'static str = "loglevel";
     #[doc(hidden)]
-    const KEY_INSTANT_BOOT: &'static str = "instantboot";
+    const KEY_TIMEOUT: &'static str = "timeout";
     #[doc(hidden)]
     const KEY_EXIT: &'static str = "exit";
     #[doc(hidden)]
@@ -51,7 +51,7 @@ impl Config {
     #[doc(hidden)]
     const DEFAULT_LOG_LEVEL: LogLevel = LogLevel::NORMAL;
     #[doc(hidden)]
-    const DEFAULT_INSTANT_BOOT: bool = false;
+    const DEFAULT_TIMEOUT: i32 = 5;
     #[doc(hidden)]
     const DEFAULT_EXIT: bool = true;
     #[doc(hidden)]
@@ -63,7 +63,7 @@ impl Config {
     pub const fn new() -> Self {
         Config {
             log_level: Config::DEFAULT_LOG_LEVEL,
-            instant_boot: Config::DEFAULT_INSTANT_BOOT,
+            timeout: Config::DEFAULT_TIMEOUT,
             exit: Config::DEFAULT_EXIT,
             edit_config: Config::DEFAULT_EDIT_CONFIG,
             menu_clear: Config::DEFAULT_MENU_CLEAR,
@@ -78,15 +78,15 @@ impl Display for Config {
             f,
 "{{
     {log_level_key}: {log_level_val:?},
-    {instant_boot_key}: {instant_boot_val},
+    {timeout_key}: {timeout_val},
     {exit_key}: {exit_val},
     {edit_config_key}: {edit_config_val},
     {menu_clear_key}: {menu_clear_val}
 }}",
             log_level_key = Config::KEY_LOG_LEVEL,
             log_level_val = self.log_level,
-            instant_boot_key = Config::KEY_INSTANT_BOOT,
-            instant_boot_val = self.instant_boot,
+            timeout_key = Config::KEY_TIMEOUT,
+            timeout_val = self.timeout,
             exit_key = Config::KEY_EXIT,
             exit_val = self.exit,
             edit_config_key = Config::KEY_EDIT_CONFIG,

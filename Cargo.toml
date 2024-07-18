@@ -1,9 +1,10 @@
 [package]
 name = "wakatiwai"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 
 [dependencies]
+chrono = { version = "0.4.38", default-features = false }
 crc = "3.2.1"
 microjson = "0.1.6"
 spin = { version = "0.9.8", features = ["rwlock"] }

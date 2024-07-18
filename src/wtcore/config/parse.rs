@@ -44,7 +44,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
     drop(config);
 
     // Get config properties
-    let instant_boot    = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_INSTANT_BOOT, Config::DEFAULT_INSTANT_BOOT, false, JSONValueType::Bool));
+    let timeout         = unwrap_json_var!(get_json_var::<i32>(&json, Config::KEY_TIMEOUT, Config::DEFAULT_TIMEOUT, false, JSONValueType::Number));
     let exit            = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EXIT, Config::DEFAULT_EXIT, false, JSONValueType::Bool));
     let edit_config     = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EDIT_CONFIG, Config::DEFAULT_EDIT_CONFIG, false, JSONValueType::Bool));
     let menu_clear      = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_MENU_CLEAR, Config::DEFAULT_MENU_CLEAR, false, JSONValueType::Bool));
@@ -76,7 +76,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
     let mut config = CONFIG.write();
     *config = Config {
         log_level,
-        instant_boot,
+        timeout,
         exit,
         edit_config,
         menu_clear,
@@ -90,7 +90,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
         }
         config.exit = true;
         config.edit_config = true;
-        config.instant_boot = false;
+        config.timeout = -1;
     }
     drop(config);
 
@@ -204,6 +204,7 @@ fn get_json_var<T: Default + Debug + FromStr + 'static>(json: &JSONValue, key: &
     const BOOL_TYPE: TypeId         = TypeId::of::<bool>();
     const FS_TYPE: TypeId           = TypeId::of::<FS>();
     const GUID_TYPE: TypeId         = TypeId::of::<Guid>();
+    const I32_TYPE: TypeId          = TypeId::of::<i32>();
     const LOG_LEVEL_TYPE: TypeId    = TypeId::of::<LogLevel>();
     const PROGTYPE_TYPE: TypeId     = TypeId::of::<Progtype>();
     const STRING_TYPE: TypeId       = TypeId::of::<String>();
@@ -225,6 +226,11 @@ fn get_json_var<T: Default + Debug + FromStr + 'static>(json: &JSONValue, key: &
             T::from_str(
                 &value.read_string().unwrap()
             ).unwrap_or_else(|_| T::from_str(&Guid::ZERO.to_string()).unwrap_unchecked())
+        }),
+        (I32_TYPE, {
+            T::from_str(
+                &value.read_integer().unwrap().to_string()
+            ).unwrap_unchecked()
         }),
         (LOG_LEVEL_TYPE, {
             T::from_str(

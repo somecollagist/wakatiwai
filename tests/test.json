@@ -18,17 +18,18 @@
 	],
 	"config": {
 		"loglevel": "DEBUG",
+		"timeout": 5,
 		"instantboot": false,
 		"menuclear": false,
 		"exit": true,
 		"editconfig": true,
 		"bootentries": [
 			{
-				"name": "Test",
+				"name": "Self",
 				"partition": 1,
 				"fs": "fat32",
 				"progtype": "UEFI",
-				"path": "/tests/hello-uefi.efi"
+				"path": "/EFI/BOOT/BOOTX64.EFI"
 			}
 		]
 	}

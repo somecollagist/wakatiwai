@@ -21,6 +21,14 @@ macro_rules! boot_services {
 	};
 }
 
+/// Shorthand to get the current system's runtime services.
+#[macro_export]
+macro_rules! runtime_services {
+	() => {
+		uefi::helpers::system_table().runtime_services()
+	};
+}
+
 /// Shorthand to get the loaded image handle.
 #[macro_export]
 macro_rules! image_handle {
@@ -93,4 +101,17 @@ impl FromStr for Progtype {
             _ => Ok(Self::default())
         }
     }
+}
+
+fn get_unix_time() -> i64 {
+    let start_time_uefi = runtime_services!().get_time().unwrap();
+    chrono::NaiveDate::from_ymd_opt(
+        start_time_uefi.year() as i32,
+        start_time_uefi.month() as u32,
+        start_time_uefi.day() as u32
+    ).unwrap().and_hms_opt(
+        start_time_uefi.hour() as u32,
+        start_time_uefi.minute() as u32,
+        start_time_uefi.second() as u32
+    ).unwrap().and_utc().timestamp()
 }

@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 
 use uefi::proto::console::text::{Color, Key, ScanCode};
 use uefi::CStr16;
+use wtcore::get_unix_time;
 
 use crate::*;
 use crate::wtcore::config::BootEntry;
@@ -47,7 +48,7 @@ impl BootMenu {
 
         menu.init();
         let mut focused_option: &MenuOption;
-        if config.instant_boot {
+        if config.timeout == 0 {
             // May only instant boot to a boot option
             if let MenuOption::BootOption(entry) = menu.focus_option(0).unwrap() {
                 return MenuOption::BootOption(entry.clone());
@@ -56,35 +57,40 @@ impl BootMenu {
             eprintln!("Instant boot did not point to a boot entry");
         }
 
+        // Timeout markers
+        let mut input_given = false;
+        let target_time = get_unix_time() + config.timeout as i64;
+        if config.timeout < 0 {
+            // Negative timeout implies wait for user input
+            input_given = true;
+        }
+
         // Use a locally-scoped variable to avoid confusing focus_option
         let mut idx = 0;
+        focused_option = menu.focus_option(0).unwrap();
         loop {
-            // Use focus_option here to highlight the option
-            focused_option = menu.focus_option(idx).unwrap();
-
-            // Loop for a key press
-            stdin!().reset(false).unwrap();
-            boot_services!()
-                .wait_for_event(
-                    [
-                        stdin!().wait_for_key_event().unwrap()
-                    ].as_mut()
-                )
-                .discard_errdata()
-                .unwrap();
+            if !input_given {
+                if target_time <= get_unix_time() {
+                    return focused_option.clone()
+                }
+            }
 
             match stdin!().read_key().unwrap() {
                 // Select the previous entry if possible
                 Some(Key::Special(ScanCode::UP)) => {
+                    input_given = true;
                     if idx > 0 {
                         idx -= 1;
                     }
+                    focused_option = menu.focus_option(idx).unwrap();
                 }
                 // Select the next entry if possible
                 Some(Key::Special(ScanCode::DOWN)) => {
+                    input_given = true;
                     if idx < menu.menu_options.len()-1 {
                         idx += 1;
                     }
+                    focused_option = menu.focus_option(idx).unwrap();
                 }
                 // Reboot if the F5 Key is pressed
                 Some(Key::Special(ScanCode::FUNCTION_5)) => {
@@ -100,10 +106,15 @@ impl BootMenu {
                         b' ' | b'\r' => {
                             return focused_option.clone();
                         },
-                        _ => {}
+                        _ => {
+                            input_given = true;
+                        }
                     }
                 }
-                _ => {}
+                None => {}
+                _ => {
+                    input_given = true;
+                }
             }
         }
     }
