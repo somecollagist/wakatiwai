@@ -5,15 +5,26 @@
 
 - [Wakatiwai](#wakatiwai)
 	- [About](#about)
+	- [Features](#features)
 	- [Installation](#installation)
 	- [Using Wakatiwai](#using-wakatiwai)
 	- [`wtconfig.json`](#wtconfigjson)
 		- [Boot Entries](#boot-entries)
+		- [Supported Filesystems](#supported-filesystems)
 	- [Contribution](#contribution)
 	- [Testing](#testing)
 
 ## About
 Wakatiwai (named after the Māori watercraft "waka tīwai", a simple canoe) is a bootloader for x86_64 UEFI written in Rust. It is engineered to support booting the Eisen operating system.
+
+## Features
+<b><ul><h3>
+	<li style="list-style-type: '🎛  '">Easy JSON Configuration
+	<li style="list-style-type: '📠  '">Customisable Logging
+	<li style="list-style-type: '🤝  '">UEFI and Flat Binary Booting
+	<li style="list-style-type: '📁  '">[Multiple File Systems](#supported-filesystems)
+	<li style="list-style-type: '🪟  '">Windows Support
+</h3></ul></b>
 
 ## Installation
 Wakatiwai needs to occupy an EFI System partition on your disk. This partition:
@@ -54,6 +65,9 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |`progtype`|String|N/A|✔|The type of program this boot entry points to. Options are: <ul><li>`"UEFI"` (Boot entry runs a UEFI program)</li><li>`"ELF"` (Boot entry runs an ELF executable)</li></ul>|
 
 ### Supported Filesystems
+- FAT12
+- FAT16
+- FAT32
 
 ## Contribution
 Contributions are more than welcome and will be processed whenever possible. Please adhere to the following guidelines:

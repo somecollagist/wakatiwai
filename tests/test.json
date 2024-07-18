@@ -2,20 +2,22 @@
 	"partitions": [
 		{
 			"type": "BOOT",
-			"size": "64M"
+			"size": "64M",
+			"content": [
+				{
+					"from": "./tests/hello-uefi.efi",
+					"to": "/tests/hello-uefi.efi"
+				}
+			]
 		},
 		{
 			"type": "20",
 			"size": "32M",
 			"fs": "fat32",
-			"content": [
+			"content" : [
 				{
 					"from": "./README.md",
 					"to": "/README.md"
-				},
-				{
-					"from": "./tests/hello-uefi.efi",
-					"to": "/tests/hello-uefi.efi"
 				}
 			]
 		}
@@ -24,12 +26,12 @@
 		"loglevel": "DEBUG",
 		"instantboot": false,
 		"menuclear": false,
-		"offershell": true,
+		"exit": true,
 		"editconfig": true,
 		"bootentries": [
 			{
 				"name": "Test",
-				"partition": 2,
+				"partition": 1,
 				"fs": "fat32",
 				"progtype": "UEFI",
 				"path": "/tests/hello-uefi.efi"
