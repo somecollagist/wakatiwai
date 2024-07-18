@@ -136,7 +136,7 @@ fn exit() -> Status {
 }
 
 fn edit_config() {
-    let mut editor = editor::Editor::new("wtconfig.json", &read_config().unwrap());
+    let mut editor = editor::Editor::new("wtconfig.json", &read_config().unwrap_or(vec![' ' as u8]));
     let editbuf = editor.edit();
     stdout!().clear().unwrap();
 

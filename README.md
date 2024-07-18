@@ -24,6 +24,7 @@ Wakatiwai (named after the Māori watercraft "waka tīwai", a simple canoe) is a
 	🤝 UEFI and Flat Binary Booting<br>
 	📁 [Multiple File Systems](#supported-filesystems)<br>
 	🪟 Windows Support<br>
+	🐧 Linux Support (for booting via systemd)<br>
 </p></h3></b>
 
 ## Installation
@@ -63,6 +64,7 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |`partition`|Integer|N/A|✔|The partition in which this boot option resides.|
 |`fs`|String|N/A|✔|The file system of the given partition. A list of supported filesystems (case sensitive, in quotes) can be found [here](#supported-filesystems).|
 |`progtype`|String|N/A|✔|The type of program this boot entry points to. Options are: <ul><li>`"UEFI"` (Boot entry runs a UEFI program)</li><li>`"ELF"` (Boot entry runs an ELF executable)</li></ul>|
+|`path`|String|N/A|✔|The path of the program this boot entry points to.|
 
 ### Supported Filesystems
 - FAT12

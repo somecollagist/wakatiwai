@@ -57,7 +57,6 @@ pub fn boot(entry: &BootEntry) -> Option<BootFailure> {
     }
 
     // Get the partition guid of the boot entry
-    dprintln!("{} of {}", entry.partition as usize - 1, disk_gpt.entries.len());
     let partition_guid = match disk_gpt.entries.get(entry.partition as usize - 1) {
         Some(some) => {
             // Run a check to see if the existing entry is *used*

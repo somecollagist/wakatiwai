@@ -2,13 +2,7 @@
 	"partitions": [
 		{
 			"type": "BOOT",
-			"size": "64M",
-			"content": [
-				{
-					"from": "./tests/hello-uefi.efi",
-					"to": "/tests/hello-uefi.efi"
-				}
-			]
+			"size": "64M"
 		},
 		{
 			"type": "20",
