@@ -18,13 +18,13 @@
 Wakatiwai (named after the Māori watercraft "waka tīwai", a simple canoe) is a bootloader for x86_64 UEFI written in Rust. It is engineered to support booting the Eisen operating system.
 
 ## Features
-<b><ul><h3>
-	<li style="list-style-type: '🎛  '">Easy JSON Configuration
-	<li style="list-style-type: '📠  '">Customisable Logging
-	<li style="list-style-type: '🤝  '">UEFI and Flat Binary Booting
-	<li style="list-style-type: '📁  '">[Multiple File Systems](#supported-filesystems)
-	<li style="list-style-type: '🪟  '">Windows Support
-</h3></ul></b>
+<b><h3><p>
+	⚙️ Easy JSON Configuration<br>
+	📠 Customisable Logging<br>
+	🤝 UEFI and Flat Binary Booting<br>
+	📁 [Multiple File Systems](#supported-filesystems)<br>
+	🪟 Windows Support<br>
+</p></h3></b>
 
 ## Installation
 Wakatiwai needs to occupy an EFI System partition on your disk. This partition:
