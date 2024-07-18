@@ -45,7 +45,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
 
     // Get config properties
     let instant_boot    = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_INSTANT_BOOT, Config::DEFAULT_INSTANT_BOOT, false, JSONValueType::Bool));
-    let offer_shell     = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_OFFER_SHELL, Config::DEFAULT_OFFER_SHELL, false, JSONValueType::Bool));
+    let exit            = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EXIT, Config::DEFAULT_EXIT, false, JSONValueType::Bool));
     let edit_config     = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EDIT_CONFIG, Config::DEFAULT_EDIT_CONFIG, false, JSONValueType::Bool));
     let menu_clear      = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_MENU_CLEAR, Config::DEFAULT_MENU_CLEAR, false, JSONValueType::Bool));
 
@@ -77,18 +77,18 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
     *config = Config {
         log_level,
         instant_boot,
-        offer_shell,
+        exit,
         edit_config,
         menu_clear,
         boot_entries
     };
     if config.boot_entries.len() == 0 {
-        // If no boot entries are available, offer shell, config edit, and wait for user input
+        // If no boot entries are available, offer exit, config edit, and wait for user input
         if config.log_level != LogLevel::SILENT {
             // wprintln! won't work here because it relies on a readable config lock, which will be blocked by the above writable lock
-            wprintln_force!("No boot entries provided, enabling UEFI shell, config editor, and halting for user input...");
+            wprintln_force!("No boot entries provided, enabling exit, config editor, and halting for user input...");
         }
-        config.offer_shell = true;
+        config.exit = true;
         config.edit_config = true;
         config.instant_boot = false;
     }

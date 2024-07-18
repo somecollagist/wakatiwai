@@ -74,11 +74,13 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
                 None => {}
             };
         }
-        MenuOption::UEFIShell => {
+        MenuOption::Exit => {
+            // Set colours because it's good if exiting to EDKII shell
             stdout!().set_color(
                 uefi::proto::console::text::Color::LightGray,
                 uefi::proto::console::text::Color::Black
             ).unwrap();
+            // What actually needs to be done
             return Status::ABORTED;
         }
         MenuOption::EditConfig => {
@@ -93,7 +95,7 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
         }
     }
 
-    shell_return()
+    exit()
 }
 
 /// Reboots the system.
@@ -110,10 +112,10 @@ fn poweroff() -> ! {
     system_table!().runtime_services().reset(ResetType::SHUTDOWN, Status::SUCCESS, None);
 }
 
-/// Prompts the user to press the Escape key and then enters the UEFI shell
-fn shell_return() -> Status {
+/// Prompts the user to press the Escape key and then exits the bootloader
+fn exit() -> Status {
     println_force!("");
-    println_force!("Press ESC to continue to UEFI shell...");
+    println_force!("Press ESC to exit...");
 
     loop {
         stdin!().reset(false).unwrap();

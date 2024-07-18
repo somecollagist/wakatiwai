@@ -24,8 +24,8 @@ pub struct Config {
     pub log_level: LogLevel,
     /// Determines if the default boot option should be booted immediately.
     pub instant_boot: bool,
-    /// Determines if the option to exit to the UEFI shell should be offered.
-    pub offer_shell: bool,
+    /// Determines if the option to exit the bootloader should be offered.
+    pub exit: bool,
     /// Determines if the option to edit the bootloader configuration file should be offered.
     pub edit_config: bool,
     /// Determines if the screen should be cleared before the boot option menu is drawn.
@@ -40,7 +40,7 @@ impl Config {
     #[doc(hidden)]
     const KEY_INSTANT_BOOT: &'static str = "instantboot";
     #[doc(hidden)]
-    const KEY_OFFER_SHELL: &'static str = "offershell";
+    const KEY_EXIT: &'static str = "exit";
     #[doc(hidden)]
     const KEY_EDIT_CONFIG: &'static str = "editconfig";
     #[doc(hidden)]
@@ -53,7 +53,7 @@ impl Config {
     #[doc(hidden)]
     const DEFAULT_INSTANT_BOOT: bool = false;
     #[doc(hidden)]
-    const DEFAULT_OFFER_SHELL: bool = true;
+    const DEFAULT_EXIT: bool = true;
     #[doc(hidden)]
     const DEFAULT_EDIT_CONFIG: bool = true;
     #[doc(hidden)]
@@ -64,7 +64,7 @@ impl Config {
         Config {
             log_level: Config::DEFAULT_LOG_LEVEL,
             instant_boot: Config::DEFAULT_INSTANT_BOOT,
-            offer_shell: Config::DEFAULT_OFFER_SHELL,
+            exit: Config::DEFAULT_EXIT,
             edit_config: Config::DEFAULT_EDIT_CONFIG,
             menu_clear: Config::DEFAULT_MENU_CLEAR,
             boot_entries: Vec::new(),
@@ -79,7 +79,7 @@ impl Display for Config {
 "{{
     {log_level_key}: {log_level_val:?},
     {instant_boot_key}: {instant_boot_val},
-    {offer_shell_key}: {offer_shell_val},
+    {exit_key}: {exit_val},
     {edit_config_key}: {edit_config_val},
     {menu_clear_key}: {menu_clear_val}
 }}",
@@ -87,8 +87,8 @@ impl Display for Config {
             log_level_val = self.log_level,
             instant_boot_key = Config::KEY_INSTANT_BOOT,
             instant_boot_val = self.instant_boot,
-            offer_shell_key = Config::KEY_OFFER_SHELL,
-            offer_shell_val = self.offer_shell,
+            exit_key = Config::KEY_EXIT,
+            exit_val = self.exit,
             edit_config_key = Config::KEY_EDIT_CONFIG,
             edit_config_val = self.edit_config,
             menu_clear_key = Config::KEY_MENU_CLEAR,

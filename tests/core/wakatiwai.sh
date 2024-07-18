@@ -80,7 +80,7 @@ rm -f $IMG
 dd if=/dev/zero of=$IMG bs=1M count=$IMG_SIZE_M >& /dev/null
 $TEST_DIR/core/image_fdisk.sh $WTPROF | fdisk $IMG > /dev/null
 echo "Image successfully formatted:"
-fdisk -l $IMG
+fdisk -x $IMG
 
 # Mount and populate file systems
 sudo losetup -P $LODEV $IMG

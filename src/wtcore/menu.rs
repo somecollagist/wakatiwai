@@ -13,8 +13,8 @@ use crate::wtcore::config::BootEntry;
 pub enum MenuOption {
     /// A bootable option, backed by a boot entry.
     BootOption(BootEntry),
-    /// Option to enter the UEFI shell.
-    UEFIShell,
+    /// Option to exit the bootloader.
+    Exit,
     /// Option to edit the bootloader configuration file.
     EditConfig,
     /// Option to reboot the computer
@@ -25,7 +25,7 @@ pub enum MenuOption {
 
 impl MenuOption {
     #[doc(hidden)]
-    const UEFI_SHELL_LABEL: &'static str = "UEFI Shell";
+    const EXIT_LABEL: &'static str = "Exit";
     #[doc(hidden)]
     const EDIT_CONFIG_LABEL: &'static str = "Edit Bootloader Config";
 }
@@ -123,9 +123,9 @@ impl BootMenu {
             println_force!(" #-> {}", entry.name);
             self.menu_options.push(MenuOption::BootOption(entry.clone()));
         }
-        if config.offer_shell {
-            println_force!(" #-$ {}", MenuOption::UEFI_SHELL_LABEL);
-            self.menu_options.push(MenuOption::UEFIShell);
+        if config.exit {
+            println_force!(" #-! {}", MenuOption::EXIT_LABEL);
+            self.menu_options.push(MenuOption::Exit);
         }
         if config.edit_config {
             println_force!(" #-@ {}", MenuOption::EDIT_CONFIG_LABEL);
@@ -190,7 +190,7 @@ impl BootMenu {
         // Get the text of the menu option
         let option_text = match self.menu_options.get(index).unwrap() {
             MenuOption::BootOption(entry) => &entry.name,
-            MenuOption::UEFIShell => MenuOption::UEFI_SHELL_LABEL,
+            MenuOption::Exit => MenuOption::EXIT_LABEL,
             MenuOption::EditConfig => MenuOption::EDIT_CONFIG_LABEL,
             _ => unreachable!()
         };
