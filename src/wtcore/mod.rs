@@ -61,7 +61,7 @@ macro_rules! current_output_mode {
 	};
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum FS {
     #[default]
     UNKNOWN,
