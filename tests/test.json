@@ -12,6 +12,10 @@
 				{
 					"from": "./README.md",
 					"to": "/README.md"
+				},
+				{
+					"from": "./tests/hello-uefi.efi",
+					"to": "/hello-uefi.efi"
 				}
 			]
 		}
@@ -19,7 +23,6 @@
 	"config": {
 		"loglevel": "DEBUG",
 		"timeout": 5,
-		"instantboot": false,
 		"menuclear": false,
 		"exit": true,
 		"editconfig": true,
@@ -30,6 +33,13 @@
 				"fs": "fat32",
 				"progtype": "UEFI",
 				"path": "/EFI/BOOT/BOOTX64.EFI"
+			},
+			{
+				"name": "Hello UEFI!",
+				"partition": 2,
+				"fs": "fat32",
+				"progtype": "UEFI",
+				"path": "/hello-uefi.efi"
 			}
 		]
 	}
