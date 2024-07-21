@@ -12,6 +12,7 @@
 		- [Boot Entries](#boot-entries)
 		- [Supported Filesystems](#supported-filesystems)
 	- [Contribution](#contribution)
+		- [Languages](#languages)
 	- [Testing](#testing)
 
 ## About
@@ -73,9 +74,38 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 
 ## Contribution
 Contributions are more than welcome and will be processed whenever possible. Please adhere to the following guidelines:
- - Use British English
  - Avoid using programming languages other than Rust - inline assembly is acceptable where absolutely crucial
  - LF, not CRLF
+
+### Languages
+This project will ideally be multi-lingual. As such, translations would be appreciated for any natural-language material produced (e.g. Markdown files, manuals, messages, etc.). UEFI only outputs characters in extended ASCII (see [ISO/IEC 8859-1:1998](https://en.wikipedia.org/wiki/ISO/IEC_8859-1)), so only languages containing these glyphs can be properly supported.
+|Language|Status (✅ - Fully supported, ❌ - Pending Support, 🚧 - In progress)|
+|---|---|
+|Afrikaans (Afrikaans)|❌|
+|Albanian (Shqip)|❌|
+|Basque (Euskara)|❌|
+|British English (English)|✅|
+|Catalan (Català)|❌|
+|Danish (Dansk)|❌|
+|Dutch (Nederlands)|❌|
+|Estonian (Eesti)|❌|
+|Finnish (Suomi)|❌|
+|French (Français)|❌|
+|German (Deutsch)|🚧|
+|Icelandic (Íslenska)|❌|
+|Irish (Gaeilge)|❌|
+|Indonesian (Bahasa Indonesia)|❌|
+|Italian (Italiano)|❌|
+|Klingon (thlIngan 'Hol)|🚧|
+|Malay (Bahasa Melayu)|❌|
+|Norwegian (Norsk)|❌|
+|Portugese (Português)|❌|
+|Romansh (Romontsch)|❌|
+|Scottish Gaelic (Gàidhlig)|❌|
+|Spanish (Español)|❌|
+|Swahili (Kiswahili)|❌|
+|Swedish (Svenska)|❌|
+|Tagalog (Wikang Tagalog)|❌|
 
 ## Testing
 The `tests` directory contains some useful scripts for testing out Wakatiwai as well as creating disk images. You can find them documented [here](tests/README.md).
