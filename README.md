@@ -1,6 +1,10 @@
 # Wakatiwai
 <p align="right">A simple and configurable UEFI bootloader, written in Rust.</p>
 
+![GitHub License](https://img.shields.io/github/license/somecollagist/wakatiwai) ![GitHub last commit](https://img.shields.io/github/last-commit/somecollagist/wakatiwai)
+
+
+
 <h2>Table of Contents</h2>
 
 - [Wakatiwai](#wakatiwai)
@@ -38,6 +42,7 @@ Wakatiwai needs to occupy an EFI System partition on your disk. This partition:
 Upon starting the bootloader, you will be greeted with a list of menu options. Use the up and down keys to focus one of these options, and press the space or enter keys to boot the focused option.
 
 The following keys also have functions:
+
 |Key|Function|
 |---|---|
 |F5|Restarts the bootloader.|
@@ -49,7 +54,7 @@ The Wakatiwai Bootloader is configured via a file called `wtconfig.json`, locate
 |Property|Type|Default|Required|Notes|
 |---|---|---|---|---|
 |`loglevel`|String|`"NORMAL"`|✘|Describes how much logging information will be outputted by the bootloader. Options are: <ul><li>`"SILENT"` (Outputs errors only)</li><li>`"QUIET"` (Outputs errors and warnings only)</li><li>`"NORMAL"` (Outputs regular messages)</li><li> `"DEBUG"` (Outputs debug messages)</li></ul>|
-|`timeout`|Integer|5|✘|Amount of time in seconds to wait until booting the default boot entry. May also be set to 0 to immediately boot or to a negative number to wait for user input.<br><br>**N.B. This must be a signed long integer (-2,147,483,648 to 2,147,483,647)**|
+|`timeout`|Integer|5|✘|Amount of time in seconds to wait until booting the default boot entry. May also be set to 0 to immediately boot or to a negative number to wait for user input.<br><br>**N.B. This must be a signed long integer (-2,147,483,648 to 2,147,483,647).**|
 |`offerexit`|Boolean|`true`|✘|If `true`, the bootloader will present the option to exit the bootloader in the boot menu.<br><br>**N.B. This can be useful to enter the UEFI (BIOS) Menu (or Shell, if supported).**|
 |`editconfig`|Boolean|`true`|✘|If `true`, the bootloader will present the option to edit the local `wtconfig.json` for future boots in the boot menu.<br><br>**WARNING: If set to `false`, mistakes in the bootloader's configuration might only be fixable from another operating system - your system may become unbootable.**|
 |`menuclear`|Boolean|`true`|✘|If `true`, the screen will be cleared when the boot menu is displayed.|
@@ -68,9 +73,9 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |`path`|String|N/A|✔|The path of the program this boot entry points to.|
 
 ### Supported Filesystems
-- FAT12
-- FAT16
-- FAT32
+ - fat12
+ - fat16
+ - fat32
 
 ## Contribution
 Contributions are more than welcome and will be processed whenever possible. Please adhere to the following guidelines:
@@ -79,12 +84,13 @@ Contributions are more than welcome and will be processed whenever possible. Ple
 
 ### Languages
 This project will ideally be multi-lingual. As such, translations would be appreciated for any natural-language material produced (e.g. Markdown files, manuals, messages, etc.). UEFI only outputs characters in extended ASCII (see [ISO/IEC 8859-1:1998](https://en.wikipedia.org/wiki/ISO/IEC_8859-1)), so only languages containing these glyphs can be properly supported.
+
 |Language|Status (✅ - Fully supported, ❌ - Pending Support, 🚧 - In progress)|
 |---|---|
 |Afrikaans (Afrikaans)|❌|
 |Albanian (Shqip)|❌|
 |Basque (Euskara)|❌|
-|British English (English)|✅|
+|British English (British English)|✅|
 |Catalan (Català)|❌|
 |Danish (Dansk)|❌|
 |Dutch (Nederlands)|❌|
@@ -96,7 +102,7 @@ This project will ideally be multi-lingual. As such, translations would be appre
 |Irish (Gaeilge)|❌|
 |Indonesian (Bahasa Indonesia)|❌|
 |Italian (Italiano)|❌|
-|Klingon (thlIngan 'Hol)|🚧|
+|[Klingon (thlIngan Hol)](docs/tlh/README.md)|🚧|
 |Malay (Bahasa Melayu)|❌|
 |Norwegian (Norsk)|❌|
 |Portugese (Português)|❌|
