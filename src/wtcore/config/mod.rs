@@ -139,7 +139,9 @@ pub struct BootEntry {
     /// The type of program this boot option points to.
     pub progtype: Progtype,
     /// The path of the boot option to be run.
-    pub path: String
+    pub path: String,
+    /// The path of the inital ramdisk to use.
+    pub initrd: String
 }
 
 impl BootEntry {
@@ -155,6 +157,8 @@ impl BootEntry {
     const KEY_PROGTYPE: &'static str = "progtype";
     #[doc(hidden)]
     const KEY_PATH: &'static str = "path";
+    #[doc(hidden)]
+    const KEY_INITRD: &'static str = "initrd";
 
     /// The maximum name length for a boot entry.
     pub const MAX_NAME_LENGTH: usize = 64;
@@ -171,13 +175,15 @@ impl Display for BootEntry {
     {fs_key}: {fs_val:?}
     {progtype_key}: {progtype_val:?}
     {path_key}: {path_val:?}
+    {initrd_key}: {initrd_val:?}
 }}",
             name_key = BootEntry::KEY_NAME, name_val = self.name,
             disk_key = BootEntry::KEY_DISK, disk_val = self.disk_guid,
             partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition,
             fs_key = BootEntry::KEY_FS, fs_val = self.fs,
             progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype,
-            path_key = BootEntry::KEY_PATH, path_val = self.path
+            path_key = BootEntry::KEY_PATH, path_val = self.path,
+            initrd_key = BootEntry::KEY_INITRD, initrd_val = self.initrd
         )
     }
 }

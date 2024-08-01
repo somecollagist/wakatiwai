@@ -89,7 +89,8 @@ pub enum Progtype {
     #[default]
     UNKNOWN,
     UEFI,
-    ELF
+    ELF,
+    LINUX,
 }
 
 impl FromStr for Progtype {
@@ -98,6 +99,7 @@ impl FromStr for Progtype {
         match s {
             "UEFI" => Ok(Self::UEFI),
             "ELF" => Ok(Self::ELF),
+            "LINUX" => Ok(Self::LINUX),
             _ => Ok(Self::default())
         }
     }

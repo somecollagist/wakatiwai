@@ -1,18 +1,28 @@
-use uefi::proto::device_path::DevicePath;
-use uefi::{Handle, Status};
+use uefi::{proto::device_path::DevicePath, table::boot::{OpenProtocolAttributes, OpenProtocolParams}, Handle, Status};
 
-use crate::{dprintln, eprintln, image_handle, system_table};
+use crate::{dprintln, eprintln, image_handle, system_table, BootEntry};
 
 use super::BootFailure;
 
-pub fn boot(boot_buffer: *mut [u8], partition_device_path: &DevicePath) -> Option<BootFailure> {
+pub fn boot(entry: &BootEntry) -> Option<BootFailure> {
     let st = system_table!();
     let ldimg: Handle;
     match st.boot_services().load_image(
         image_handle!(),
-        uefi::table::boot::LoadImageSource::FromBuffer {
-            buffer: unsafe { boot_buffer.as_ref().unwrap() },
-            file_path: Some(partition_device_path) 
+        unsafe {
+            uefi::table::boot::LoadImageSource::FromBuffer {
+                buffer: super::read::read_file(entry, &entry.path).unwrap().as_ref().unwrap(),
+                file_path: Some(
+                    &st.boot_services().open_protocol::<DevicePath>(
+                        OpenProtocolParams {
+                            handle: Handle::from_ptr(super::read::PARTITION_HANDLE.read().unwrap() as *mut core::ffi::c_void).unwrap(),
+                            agent: image_handle!(),
+                            controller: None
+                        },
+                        OpenProtocolAttributes::GetProtocol
+                    ).unwrap()
+                ) 
+            }
         }
     ) {
         Ok(ok) => {
