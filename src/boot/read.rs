@@ -71,12 +71,12 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
         }
     };
 
-    let mut dp_protocol: Option<ScopedProtocol<DevicePath>> = None;
     for handle in st.boot_services().locate_handle_buffer(
         uefi::table::boot::SearchType::ByProtocol(
             &BlockIoProtocol::GUID
         )
     ).unwrap().iter() {
+        let dp_protocol: ScopedProtocol<DevicePath>;
         match unsafe {
             st.boot_services().open_protocol::<DevicePath>(
                 OpenProtocolParams {
@@ -88,13 +88,13 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
             )
         } {
             Ok(ok) => {
-                dp_protocol = Some(ok);
+                dp_protocol = ok;
             }
             Err(_) => {
                 continue;
             }
         };
-        let dpath = dp_protocol.as_ref().unwrap().to_string(st.boot_services(), DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string();
+        let dpath = dp_protocol.to_string(st.boot_services(), DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string();
 
         // If the device path doesn't point to the specified partition, skip
         if !dpath.contains(&format!("HD({},GPT,{}", entry.partition, partition_guid.to_string().to_uppercase())) {
