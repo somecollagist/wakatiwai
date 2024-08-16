@@ -71,6 +71,8 @@ Boot entries are themselves respresented in JSON within the `bootentries` array 
 |`fs`|String|N/A|✔|The file system of the given partition. A list of supported filesystems (case sensitive, in quotes) can be found [here](#supported-filesystems).|
 |`progtype`|String|N/A|✔|The type of program this boot entry points to. Options are: <ul><li>`"UEFI"` (Boot entry runs a UEFI program)</li><li>`"ELF"` (Boot entry runs an ELF executable)</li></ul>|
 |`path`|String|N/A|✔|The path of the program this boot entry points to.|
+|`initrd`|String|N/A|✘|The path of the ramdisk this boot entry should preload.|
+|`args`|String|N/A|✘|A list of arguments to be passed into the boot entry.|
 
 ### Supported Filesystems
  - fat12

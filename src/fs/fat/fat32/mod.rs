@@ -10,7 +10,6 @@ use core::slice::from_raw_parts;
 use crate::dev::reader::DiskReader;
 use crate::fs::{FileSystemAPI, FileSystemOperationError};
 use crate::wprintln;
-use crate::dprintln;
 
 pub struct FAT32 {
     bpb: disk::BPB,
@@ -220,10 +219,8 @@ impl FileSystemAPI for FAT32 {
                     return Err(FileSystemOperationError::ReadDirectoryAsFile);
                 }
 
-                dprintln!("Found target file");
                 let mut ret = self.read_cluster_chain(reader, some.metadata.first_cluster());
                 ret.truncate(some.metadata.file_size as usize);
-                dprintln!("Read and truncated");
                 return Ok(ret.to_vec());
             }
             None => {

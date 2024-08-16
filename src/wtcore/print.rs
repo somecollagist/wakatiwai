@@ -8,7 +8,7 @@ macro_rules! eprint {
 }
 
 /// Prints an error message with a newline.
-/// Note: This is functionally equal to `eprint_force!`.
+/// Note: This is functionally equal to `eprintln_force!`.
 #[macro_export]
 macro_rules! eprintln {
 	($($arg:tt)*) => {

@@ -113,6 +113,7 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
     let progtype        = unwrap_json_var!(get_json_var::<Progtype>(&json, BootEntry::KEY_PROGTYPE, Progtype::UNKNOWN, true, JSONValueType::String));
     let path            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_PATH, String::new(), true, JSONValueType::String));
     let initrd          = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_INITRD, String::new(), false, JSONValueType::String));
+    let args            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_ARGS, String::new(), false, JSONValueType::String));
 
     if disk_guid == Guid::ZERO {
         wprintln!("Disk property missing or malformed, assuming current...");
@@ -135,7 +136,8 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
         fs,
         progtype,
         path,
-        initrd
+        initrd,
+        args
     })
 }
 

@@ -165,7 +165,7 @@ impl GPT {
 }
 
 /// A structure describing a GPT Header.
-/// [Specificaion](https://uefi.org/specs/UEFI/2.10/05_GUID_Partition_Table_Format.html#gpt-header).
+/// [Specification](https://uefi.org/specs/UEFI/2.10/05_GUID_Partition_Table_Format.html#gpt-header).
 #[derive(Clone, Copy, Debug)]
 #[repr(C, packed)]
 pub struct GPTHeader {

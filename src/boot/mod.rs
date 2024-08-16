@@ -41,8 +41,12 @@ pub enum BootFailure {
     UEFILoadError(Status),
     /// An error was encountered in booting a UEFI program.
     UEFIBootError(Status),
-    /// The path to an initial ramdisk was required but not specified.
-    NoInitrd
+    /// There is insufficient memory to load the kernel.
+    InsufficientMemory(Status),
+    /// An unsupported (old) version of Linux was requested to be booted.
+    OldLinuxBootProtocol,
+    /// The Linux boot option does not have relocatable protected-mode code.
+    LinuxNotRelocatable
 }
 
 

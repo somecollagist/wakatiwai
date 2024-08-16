@@ -4,4 +4,4 @@ qemu-system-x86_64          \
 	-net none               \
 	-usb $1                 \
 	-vga std                \
-	-m 256M
+	-m 4G
