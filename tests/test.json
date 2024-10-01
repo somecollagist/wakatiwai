@@ -40,6 +40,14 @@
 				"fs": "fat32",
 				"progtype": "UEFI",
 				"path": "/hello-uefi.efi"
+			},
+			{
+				"name": "USB",
+				"removable": true,
+				"partition": 1,
+				"fs": "fat32",
+				"progtype": "UEFI",
+				"path": "/usb.efi"
 			}
 		]
 	}

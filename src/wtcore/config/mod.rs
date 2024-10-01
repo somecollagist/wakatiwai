@@ -130,6 +130,8 @@ impl FromStr for LogLevel {
 pub struct BootEntry {
     /// The name of the boot option, displayed to the user.
     pub name: String,
+    /// Is this boot option on a removable drive?
+    pub removable: bool,
     /// The GUID of the disk containing this boot option.
     pub disk_guid: Guid,
     /// The partition of the disk containing this boot option.
@@ -149,6 +151,8 @@ pub struct BootEntry {
 impl BootEntry {
     #[doc(hidden)]
     const KEY_NAME: &'static str = "name";
+    #[doc(hidden)]
+    const KEY_REMOVABLE: &'static str = "removable";
     #[doc(hidden)]
     const KEY_DISK: &'static str = "diskguid";
     #[doc(hidden)]
@@ -174,6 +178,7 @@ impl Display for BootEntry {
             f,
 "{{
     {name_key}: {name_val},
+    {removable_key}: {removable_val},
     {disk_key}: {disk_val}
     {partition_key}: {partition_val}
     {fs_key}: {fs_val:?}
@@ -183,6 +188,7 @@ impl Display for BootEntry {
     {args_key}: {args_val:?}
 }}",
             name_key = BootEntry::KEY_NAME, name_val = self.name,
+            removable_key = BootEntry::KEY_REMOVABLE, removable_val = self.removable,
             disk_key = BootEntry::KEY_DISK, disk_val = self.disk_guid,
             partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition,
             fs_key = BootEntry::KEY_FS, fs_val = self.fs,

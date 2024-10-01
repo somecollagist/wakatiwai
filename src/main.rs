@@ -5,7 +5,6 @@
     const_option,
     const_type_id,
     iter_advance_by,
-    panic_info_message,
     slice_split_once,
     trait_upcasting
 )]

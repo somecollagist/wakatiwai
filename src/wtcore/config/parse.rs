@@ -107,6 +107,7 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
 
     // Get boot entry properties
     let name            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_NAME, String::new(), true, JSONValueType::String));
+    let removable       = unwrap_json_var!(get_json_var::<bool>(&json, BootEntry::KEY_REMOVABLE, false, false, JSONValueType::Bool));
     let mut disk_guid   = unwrap_json_var!(get_json_var::<Guid>(&json, BootEntry::KEY_DISK, Guid::ZERO, false, JSONValueType::String));
     let partition       = unwrap_json_var!(get_json_var::<u32>(&json, BootEntry::KEY_PARTITION, 0, true, JSONValueType::Number));
     let fs              = unwrap_json_var!(get_json_var::<FS>(&json, BootEntry::KEY_FS, FS::UNKNOWN, true, JSONValueType::String));
@@ -116,8 +117,13 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
     let args            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_ARGS, String::new(), false, JSONValueType::String));
 
     if disk_guid == Guid::ZERO {
-        wprintln!("Disk property missing or malformed, assuming current...");
-        disk_guid = *dev::BOOTLOADER_DISK_GUID;
+        if removable {
+            wprintln!("Removable disk specifies no disk GUID, ignoring...");
+        }
+        else {
+            wprintln!("Disk property missing or malformed, assuming current...");
+            disk_guid = *dev::BOOTLOADER_DISK_GUID;
+        }
     }
 
     if fs == FS::UNKNOWN {
@@ -131,6 +137,7 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
 
     Ok(BootEntry {
         name,
+        removable,
         disk_guid,
         partition,
         fs,

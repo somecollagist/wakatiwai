@@ -2,6 +2,7 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
+use dev::DISK_GUID_HANDLE_MAPPING;
 use uefi::proto::console::text::{Color, Key, ScanCode};
 use uefi::CStr16;
 use wtcore::get_unix_time;
@@ -131,6 +132,11 @@ impl BootMenu {
         println_force!(" Wakatiwai Bootloader |");
         println_force!("=#====================|");
         for entry in &config.boot_entries {
+            if entry.removable {
+                if !DISK_GUID_HANDLE_MAPPING.contains_key(&entry.disk_guid) {
+                    continue;
+                }
+            }
             println_force!(" #-> {}", entry.name);
             self.menu_options.push(MenuOption::BootOption(entry.clone()));
         }
