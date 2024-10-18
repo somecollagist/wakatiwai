@@ -1,5 +1,6 @@
 extern crate alloc;
 
+use alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use uefi::{CStr16, CString16, Char16};
@@ -15,7 +16,18 @@ pub struct DirectoryEntry {
 impl DirectoryEntry {
     pub fn name(&self) -> String {
         if self.long_name.len() == 0 {
-            return unsafe { String::from_utf8_unchecked(self.metadata.name.to_vec()) }
+            unsafe {
+                return if self.metadata.extension != [0x20, 0x20, 0x20] { // If the extension isn't just spaces
+                    format!(
+                        "{}.{}",
+                        String::from_utf8_unchecked(self.metadata.name.to_vec()).trim(),
+                        String::from_utf8_unchecked(self.metadata.extension.to_vec()).trim()
+                    ).to_uppercase()
+                }
+                else {
+                    String::from_utf8_unchecked(self.metadata.name.to_vec()).trim().to_owned().to_uppercase()
+                }
+            }
         }
         
         let mut name_builder = Vec::new();
@@ -36,7 +48,7 @@ impl DirectoryEntry {
 
         let mut ret_cstr16 = CString16::new();
         ret_cstr16.push_str(CStr16::from_char16_with_nul(&name_builder).unwrap());
-        ret_cstr16.to_string()
+        ret_cstr16.to_string().to_uppercase()
     }
 
     pub fn is_file(&self) -> bool {

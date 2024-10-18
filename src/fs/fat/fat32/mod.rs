@@ -197,7 +197,7 @@ impl FileSystemAPI for FAT32 {
         
         let mut dir_entries = self.root_dir.clone();
         for dir_level in dir_levels {
-            match dir_entries.iter().find(|t| &t.name() == dir_level ) {
+            match dir_entries.iter().find(|t| t.name() == dir_level.to_uppercase() ) {
                 Some(some) => {
                     if !some.is_directory() {
                         return Err(FileSystemOperationError::FileNotFound);
@@ -213,7 +213,7 @@ impl FileSystemAPI for FAT32 {
             }
         }
 
-        match dir_entries.iter().find(|t| &t.name() == file_name ) {
+        match dir_entries.iter().find(|t| t.name() == file_name.to_uppercase() ) {
             Some(some) => {
                 if !some.is_file() {
                     return Err(FileSystemOperationError::ReadDirectoryAsFile);
