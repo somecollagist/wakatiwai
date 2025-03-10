@@ -112,7 +112,8 @@ while read -r part; do
 		sudo mkdir -p $MNTPT/EFI/BOOT
 		sudo cp $PROJ_DIR/out/wakatiwai.efi $MNTPT/EFI/BOOT/BOOTX64.EFI
 		jq ".config" $WTPROF > /tmp/wtconfig.json
-		sudo cp /tmp/wtconfig.json $MNTPT/wtconfig.json
+		sudo mkdir -p $MNTPT/EFI/wakatiwai
+		sudo cp /tmp/wtconfig.json $MNTPT/EFI/wakatiwai/wtconfig.json
 
 		echo "Created Wakatiwai boot partition on partition $LOPC"
 		FS_TYPE="BOOT" # makes unmounting easier

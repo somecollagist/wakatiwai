@@ -14,6 +14,9 @@ use uefi::{cstr16, CStr16, Guid};
 
 use crate::wtcore::*;
 
+/// Path to the bootloader configuration file.
+const CONFIG_PATH: &CStr16 = cstr16!("\\EFI\\wakatiwai\\wtconfig.json");
+
 /// The loaded configuration for the bootloader.
 pub static CONFIG: RwLock<Config> = RwLock::new(Config::new());
 
@@ -199,6 +202,3 @@ impl Display for BootEntry {
         )
     }
 }
-
-/// Path to the bootloader configuration file.
-const CONFIG_PATH: &CStr16 = cstr16!("wtconfig.json");
