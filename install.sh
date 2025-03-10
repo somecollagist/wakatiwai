@@ -24,7 +24,7 @@ fi
 PROJ_DIR=$(realpath $(dirname $0))
 
 cd $PROJ_DIR
-cargo build --profile release --out-dir ./out -Z unstable-options
+cargo build --profile release --artifact-dir ./out -Z unstable-options
 BUILD_ERR_CODE=$?
 if [ $BUILD_ERR_CODE -ne 0 ]; then
 	exit $BUILD_ERR_CODE
@@ -39,6 +39,13 @@ ESP_DISK_DEV=$(findmnt $ESP_MNT -no SOURCE | sed "s/p$ESP_DISK_PART$//")
 sudo mkdir -p "$ESP_MNT/EFI/wakatiwai"
 sudo cp ./out/wakatiwai.efi "$ESP_MNT/EFI/wakatiwai/wakatiwai.efi"
 echo "Copied bootloader program"
+
+CURRENT_WAKATIWAI=$(efibootmgr | grep -oE "Boot[0-9]{4}\\* Wakatiwai" | grep -oE "[0-9]{4}")
+if [ $? -eq 0 ]; then
+	# Wakatiwai exists as a boot option - clean it
+	efibootmgr -B -b $CURRENT_WAKATIWAI
+	echo "Removed duplicate boot entry (Boot$CURRENT_WAKATIWAI)"
+fi
 
 efibootmgr -c -L "Wakatiwai" -l "\EFI\wakatiwai\wakatiwai.efi" -d $ESP_DISK_DEV -p $ESP_DISK_PART
 echo "Successfully added boot entry"

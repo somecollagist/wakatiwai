@@ -2,11 +2,9 @@
 #![no_main]
 #![feature(
     alloc_error_handler,
-    const_option,
     const_type_id,
     iter_advance_by,
-    slice_split_once,
-    trait_upcasting
+    slice_split_once
 )]
 #![allow(
     unused_unsafe
@@ -39,7 +37,7 @@ fn main() -> Status {
     uefi::helpers::init().unwrap();
 
     // Initial stdout
-    stdout!().clear();
+    let _ = stdout!().clear();
     let mut best_mode = current_output_mode!();
     for mode in stdout!().modes() { 
         if mode.rows() > best_mode.rows() {
