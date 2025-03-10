@@ -1,8 +1,8 @@
-use core::panic::PanicInfo;
+use core::{panic::PanicInfo, ptr::null_mut};
 
-use uefi::{Char16, Status};
+use uefi::Status;
 
-use crate::{eprintln_force, image_handle, println_force, system_table};
+use crate::{eprintln_force, image_handle, println_force};
 
 /// Panic handler.
 #[panic_handler]
@@ -14,8 +14,8 @@ fn panic(info: &PanicInfo) -> ! {
     );
     println_force!("Exiting in 5 seconds...");
 
-    system_table!().boot_services().stall(5_000_000);
+    uefi::boot::stall(5_000_000);
     unsafe {
-        system_table!().boot_services().exit(image_handle!(), Status::ABORTED, 0, 0 as *mut Char16);
+        uefi::boot::exit(image_handle!(), Status::ABORTED, 0, null_mut());
     }
 }

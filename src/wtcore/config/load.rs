@@ -19,10 +19,8 @@ pub fn load_config() -> Result<(), Status> {
 
 /// Attempts to read the bootloader configuration file and returns a byte vector containing the file data on a success.
 pub fn read_config() -> Result<Vec<u8>, Status> {
-    let system_table = system_table!();
-
     // Attempt to get the file system containing the bootloader - the config file should be in the same file system
-    let mut efifs = match system_table.boot_services().get_image_file_system(image_handle!()) {
+    let mut efifs = match uefi::boot::get_image_file_system(image_handle!()) {
         Ok(ok) => FileSystem::new(ok),
         Err(err) => {
             eprintln!("Unable to read image file system");

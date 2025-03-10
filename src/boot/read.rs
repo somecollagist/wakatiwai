@@ -6,12 +6,12 @@ use uefi::proto::device_path::text::{AllowShortcuts, DisplayOnly};
 use uefi::proto::device_path::DevicePath;
 use uefi::proto::media::block::BlockIoProtocol;
 use uefi::proto::media::disk::DiskIo;
-use uefi::table::boot::{MemoryType, OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol};
+use uefi::boot::{MemoryType, OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol, SearchType};
 use uefi::{Guid, Handle};
 
 use crate::boot::{DISK_GUID_HANDLE_MAPPING, DiskReader, GPT};
 use crate::fs::FileSystem;
-use crate::{BootEntry, image_handle, system_table};
+use crate::{BootEntry, image_handle};
 
 use super::BootFailure;
 
@@ -19,7 +19,6 @@ use super::BootFailure;
 pub static PARTITION_HANDLE: spin::RwLock<Option<usize>> = spin::RwLock::new(None);
 
 pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure>{
-    let st = system_table!();
     // Get a handle to the disk
     let disk_handle: Handle;
     match DISK_GUID_HANDLE_MAPPING.get(&entry.disk_guid) {
@@ -36,7 +35,7 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
     match GPT::read_gpt(&DiskReader::new(
         &disk_handle,
         unsafe {
-            &st.boot_services().open_protocol(
+            uefi::boot::open_protocol(
                 OpenProtocolParams {
                     handle: disk_handle,
                     agent: image_handle!(),
@@ -71,20 +70,20 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
         }
     };
 
-    for handle in st.boot_services().locate_handle_buffer(
-        uefi::table::boot::SearchType::ByProtocol(
+    for handle in uefi::boot::locate_handle_buffer(
+        SearchType::ByProtocol(
             &BlockIoProtocol::GUID
         )
     ).unwrap().iter() {
         let dp_protocol: ScopedProtocol<DevicePath>;
         match unsafe {
-            st.boot_services().open_protocol::<DevicePath>(
+            uefi::boot::open_protocol::<DevicePath>(
                 OpenProtocolParams {
                     handle: *handle,
                     agent: image_handle!(),
                     controller: None
                 },
-                uefi::table::boot::OpenProtocolAttributes::GetProtocol
+                OpenProtocolAttributes::GetProtocol
             )
         } {
             Ok(ok) => {
@@ -94,7 +93,7 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
                 continue;
             }
         };
-        let dpath = dp_protocol.to_string(st.boot_services(), DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string();
+        let dpath = dp_protocol.to_string(DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string();
 
         // If the device path doesn't point to the specified partition, skip
         if !dpath.contains(&format!("HD({},GPT,{}", entry.partition, partition_guid.to_string().to_uppercase())) {
@@ -109,7 +108,7 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
 
     let disk_protocol: ScopedProtocol<DiskIo>;
     match unsafe {
-        st.boot_services().open_protocol::<DiskIo>(
+        uefi::boot::open_protocol::<DiskIo>(
             OpenProtocolParams {
                 handle: Handle::from_ptr(PARTITION_HANDLE.read().unwrap() as *mut core::ffi::c_void).unwrap(),
                 agent: image_handle!(),
@@ -128,13 +127,13 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
 
     let reader = DiskReader::new(
         unsafe { &Handle::from_ptr(PARTITION_HANDLE.read().unwrap() as *mut core::ffi::c_void).unwrap() },
-        &disk_protocol,
+        disk_protocol,
         0
     );
-    let fs = FileSystem::new_filesystem(entry.fs, &reader).unwrap();
+    let fs = FileSystem::new_filesystem(entry.fs, reader).unwrap();
     let boot_read = fs.load_file(path).unwrap();
     let buffer = core::ptr::slice_from_raw_parts_mut(
-        st.boot_services().allocate_pool(MemoryType::LOADER_DATA, boot_read.len()).unwrap(),
+        uefi::boot::allocate_pool(MemoryType::LOADER_DATA, boot_read.len()).unwrap().as_ptr(),
         boot_read.len()
     );
 

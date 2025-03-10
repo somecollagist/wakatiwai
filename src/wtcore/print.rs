@@ -165,7 +165,7 @@ macro_rules! dprintln {
 macro_rules! eprint_force {
 	() => {};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightRed,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -180,7 +180,7 @@ macro_rules! eprintln_force {
 		uefi::println!("");
 	};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightRed,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -193,7 +193,7 @@ macro_rules! eprintln_force {
 macro_rules! wprint_force {
 	() => {};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::Yellow,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -208,7 +208,7 @@ macro_rules! wprintln_force {
 		uefi::println!("");
 	};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::Yellow,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -221,7 +221,7 @@ macro_rules! wprintln_force {
 macro_rules! print_force {
 	() => {};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightGray,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -236,7 +236,7 @@ macro_rules! println_force {
 		uefi::println!("");
 	};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightGray,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -249,7 +249,7 @@ macro_rules! println_force {
 macro_rules! dprint_force {
 	() => {};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightCyan,
 			uefi::proto::console::text::Color::Black
 		).unwrap();
@@ -264,7 +264,7 @@ macro_rules! dprintln_force {
 		uefi::println!("");
 	};
 	($($arg:tt)*) => {
-		uefi::helpers::system_table().stdout().set_color(
+		crate::stdout!().set_color(
 			uefi::proto::console::text::Color::LightCyan,
 			uefi::proto::console::text::Color::Black
 		).unwrap();

@@ -57,7 +57,7 @@ done
 
 # Build bootloader
 cd $PROJ_DIR
-cargo build --profile $RELEASE --out-dir ./out -Z unstable-options
+cargo build --profile $RELEASE --artifact-dir ./out -Z unstable-options
 BUILD_ERR_CODE=$?
 if [ $BUILD_ERR_CODE -ne 0 ]; then
 	exit $BUILD_ERR_CODE

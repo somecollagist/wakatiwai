@@ -5,35 +5,11 @@ pub mod menu;
 pub mod panic;
 pub mod print;
 
-/// Shorthand to get the current system table.
-#[macro_export]
-macro_rules! system_table {
-	() => {
-		uefi::helpers::system_table()
-	};
-}
-
-/// Shorthand to get the current system's boot services.
-#[macro_export]
-macro_rules! boot_services {
-	() => {
-		uefi::helpers::system_table().boot_services()
-	};
-}
-
-/// Shorthand to get the current system's runtime services.
-#[macro_export]
-macro_rules! runtime_services {
-	() => {
-		uefi::helpers::system_table().runtime_services()
-	};
-}
-
 /// Shorthand to get the loaded image handle.
 #[macro_export]
 macro_rules! image_handle {
 	() => {
-		crate::boot_services!().image_handle()
+		uefi::boot::image_handle()
 	};
 }
 
@@ -41,7 +17,15 @@ macro_rules! image_handle {
 #[macro_export]
 macro_rules! stdin {
 	() => {
-		crate::system_table!().stdin()
+		unsafe {
+            core::mem::transmute::
+                <
+                    *mut uefi_raw::protocol::console::SimpleTextInputProtocol,
+                    *mut uefi::proto::console::text::Input
+                >
+            (uefi::table::system_table_raw().unwrap().as_mut().stdin)
+            .as_mut().unwrap()
+        }
 	};
 }
 
@@ -49,7 +33,15 @@ macro_rules! stdin {
 #[macro_export]
 macro_rules! stdout {
 	() => {
-		crate::system_table!().stdout()
+		unsafe {
+            core::mem::transmute::
+                <
+                    *mut uefi_raw::protocol::console::SimpleTextOutputProtocol,
+                    *mut uefi::proto::console::text::Output
+                >
+            (uefi::table::system_table_raw().unwrap().as_mut().stdout)
+            .as_mut().unwrap()
+        }
 	};
 }
 
@@ -106,7 +98,7 @@ impl FromStr for Progtype {
 }
 
 fn get_unix_time() -> i64 {
-    let start_time_uefi = runtime_services!().get_time().unwrap();
+    let start_time_uefi = uefi::runtime::get_time().unwrap();
     chrono::NaiveDate::from_ymd_opt(
         start_time_uefi.year() as i32,
         start_time_uefi.month() as u32,

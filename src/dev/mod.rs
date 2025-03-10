@@ -9,13 +9,12 @@ use alloc::vec::Vec;
 
 use reader::DiskReader;
 use spin::Lazy;
+use uefi::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol, SearchType};
 use uefi::proto::media::disk::DiskIo;
-use uefi::table::boot::SearchType::*;
-use uefi::table::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol};
 use uefi::{Guid, Handle};
 use uefi_raw::protocol::*;
 
-use crate::{dprintln, eprintln, image_handle, system_table};
+use crate::{dprintln, eprintln, image_handle};
 
 /// A map of GPT disk GUIDs to the corresponding disk handle addresses.
 pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
@@ -23,7 +22,6 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
     
     // Iterate all devide handles
     let device_handles = get_block_io_device_handles();
-    let st = system_table!();
     for device_handle in device_handles.iter() {
         dprintln!("Opening device handle {:#010x}", device_handle.as_ptr() as u64);
         
@@ -31,7 +29,7 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
         let protocol: ScopedProtocol<DiskIo>;
         unsafe {
             // Cannot open as exclusive otherwise crashes
-            match st.boot_services().open_protocol::<DiskIo>(
+            match uefi::boot::open_protocol::<DiskIo>(
                 OpenProtocolParams {
                     handle: *device_handle,
                     agent: image_handle!(),
@@ -49,7 +47,7 @@ pub static DISK_GUID_HANDLE_MAPPING: Lazy<BTreeMap<Guid, u64>> = Lazy::new(|| {
             }
         }
 
-        let reader = DiskReader::new(device_handle, &protocol, 0);
+        let reader = DiskReader::new(device_handle, protocol, 0);
 
         // Attempt to read a GPT, push its GUID and the current handle if it exists, otherwise continue
         match gpt::GPT::read_gpt(&reader) {
@@ -90,9 +88,8 @@ pub static BOOTLOADER_DISK_GUID: Lazy<Guid> = Lazy::new(|| {
 pub fn get_block_io_device_handles() -> Vec<Handle> {
     let mut ret = Vec::new();
     
-    let st = system_table!();
-    for handle in st.boot_services().locate_handle_buffer(
-        ByProtocol(
+    for handle in uefi::boot::locate_handle_buffer(
+        SearchType::ByProtocol(
             &block::BlockIoProtocol::GUID
         )
     ).unwrap().iter() {

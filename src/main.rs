@@ -8,6 +8,9 @@
     slice_split_once,
     trait_upcasting
 )]
+#![allow(
+    unused_unsafe
+)]
 
 mod dev;
 mod boot;
@@ -21,9 +24,9 @@ use alloc::string::String;
 
 use uefi::prelude::*;
 use uefi::proto::console::text::{Key, ScanCode};
-use uefi::table::runtime::ResetType;
 
 use boot::attempt_boot;
+use uefi::runtime::ResetType;
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
 use wtcore::config::write::write_config;
@@ -31,19 +34,19 @@ use wtcore::menu::{BootMenu, MenuOption};
 
 /// Entry point for the Wakatiwai bootloader.
 #[entry]
-fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
+fn main() -> Status {
     // Init the boot services
-    uefi::helpers::init(&mut system_table).unwrap();
+    uefi::helpers::init().unwrap();
 
     // Initial stdout
-    system_table.stdout().clear().unwrap();
-    let mut best_mode = system_table.stdout().current_mode().unwrap().unwrap();
-    for mode in system_table.stdout().modes() { 
+    stdout!().clear();
+    let mut best_mode = current_output_mode!();
+    for mode in stdout!().modes() { 
         if mode.rows() > best_mode.rows() {
             best_mode = mode;
         }
     }
-    system_table.stdout().set_mode(best_mode).unwrap();
+    stdout!().set_mode(best_mode).unwrap();
     println_force!("Starting Wakatiwai Bootloader");
 
     // Load config file
@@ -52,7 +55,7 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
         Err(err) => {
             eprintln!("Failed to load config: {}", err);
             println_force!("Opening editor in 5 seconds...");
-            boot_services!().stall(5_000_000);
+            uefi::boot::stall(5_000_000);
             edit_config();
             reboot();
         }
@@ -100,15 +103,15 @@ fn main(image_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 /// Reboots the system.
 fn reboot() -> ! {
     println!("Rebooting...");
-    system_table!().boot_services().stall(100_000);
-    system_table!().runtime_services().reset(ResetType::COLD, Status::SUCCESS, None);
+    uefi::boot::stall(100_000);
+    uefi::runtime::reset(ResetType::COLD, Status::SUCCESS, None);
 }
 
 /// Powers off the system.
 fn poweroff() -> ! {
     println!("Powering off...");
-    system_table!().boot_services().stall(100_000);
-    system_table!().runtime_services().reset(ResetType::SHUTDOWN, Status::SUCCESS, None);
+    uefi::boot::stall(100_000);
+    uefi::runtime::reset(ResetType::SHUTDOWN, Status::SUCCESS, None);
 }
 
 /// Prompts the user to press the Escape key and then exits the bootloader
@@ -118,10 +121,9 @@ fn exit() -> Status {
 
     loop {
         stdin!().reset(false).unwrap();
-        boot_services!()
-            .wait_for_event([stdin!().wait_for_key_event().unwrap()].as_mut())
-            .discard_errdata()
-            .unwrap();
+        uefi::boot::wait_for_event(
+            [stdin!().wait_for_key_event().unwrap()].as_mut()
+        ).discard_errdata().unwrap();
 
         match stdin!().read_key().unwrap() {
             Some(Key::Special(ScanCode::ESCAPE)) => {

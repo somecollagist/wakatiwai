@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 use uefi::proto::console::text::{Key, ScanCode};
 use uefi::ResultExt;
 
-use crate::{boot_services, stdin, stdout};
+use crate::{stdin, stdout};
 
 impl super::Editor {
     pub fn edit(&mut self) -> &Vec<u8> {
@@ -19,14 +19,9 @@ impl super::Editor {
 
         loop {
             // Loop for a key press
-            boot_services!()
-                .wait_for_event(
-                    [
-                        stdin!().wait_for_key_event().unwrap()
-                    ].as_mut()
-                )
-                .discard_errdata()
-                .unwrap();
+            uefi::boot::wait_for_event(
+                [stdin!().wait_for_key_event().unwrap()].as_mut()
+            ).discard_errdata().unwrap();
 
             match stdin!().read_key().unwrap() {
                 // Move Cursor up

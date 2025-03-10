@@ -10,10 +10,8 @@ use crate::wtcore::config::*;
 
 /// Writes to a byte array to the bootloader configuration file, overwriting the existing contents.
 pub fn write_config(buffer: &Vec<u8>) -> Result<(), Status> {
-    let system_table = system_table!();
-
     // Attempt to get the file system containing the bootloader - the config file should be in the same file system
-    let mut efifs = match system_table.boot_services().get_image_file_system(image_handle!()) {
+    let mut efifs = match uefi::boot::get_image_file_system(image_handle!()) {
         Ok(ok) => FileSystem::new(ok),
         Err(err) => return Err(err.status()),
     };

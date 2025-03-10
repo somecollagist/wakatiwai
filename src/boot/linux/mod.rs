@@ -2,16 +2,15 @@ mod structures;
 
 use core::slice::from_raw_parts_mut;
 
-use uefi::table::boot::{AllocateType, MemoryType, PAGE_SIZE};
+use uefi::boot::{AllocateType, MemoryType, PAGE_SIZE};
 
 use crate::boot::{BootEntry, BootFailure};
-use crate::{dprintln, eprintln, println, system_table, wprintln};
+use crate::{dprintln, eprintln, println, wprintln};
 
 const MIN_SUPPORTED_VERSION: u16 = 0x020D;
 const DEFAULT_LOAD_LOCATION: u64 = 0x1780000;
 
 pub fn boot(entry: &BootEntry) -> Option<BootFailure> {
-    let st = system_table!();
     let kernel_image: *mut [u8];
     let kernel_load_addr: u64;
     let mut initrd: Option<*mut [u8]> = None;
@@ -51,13 +50,13 @@ pub fn boot(entry: &BootEntry) -> Option<BootFailure> {
     }
 
     // Allocate kernel space
-    match st.boot_services().allocate_pages(
+    match uefi::boot::allocate_pages(
         AllocateType::AnyPages,
         MemoryType::LOADER_DATA,
         (kernel_image.len() / PAGE_SIZE) + 1
     ) {
         Ok(ok) => {
-            kernel_load_addr = ok;
+            kernel_load_addr = ok.as_ptr() as u64;
         }
         Err(err) => {
             return Some(BootFailure::InsufficientMemory(err.status()));
@@ -78,13 +77,13 @@ pub fn boot(entry: &BootEntry) -> Option<BootFailure> {
         }
 
         // Allocate initrd space
-        match st.boot_services().allocate_pages(
+        match uefi::boot::allocate_pages(
             AllocateType::MaxAddress(unsafe { (*kernel_header).initrd_addr_max as u64 }),
             MemoryType::LOADER_DATA,
             (initrd.unwrap().len() / PAGE_SIZE) + 1
         ) {
             Ok(ok) => {
-                initrd_load_addr = Some(ok);
+                initrd_load_addr = Some(ok.as_ptr() as u64);
             }
             Err(err) => {
                 return Some(BootFailure::InsufficientMemory(err.status()));
