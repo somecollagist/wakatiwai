@@ -63,6 +63,13 @@ if [ $BUILD_ERR_CODE -ne 0 ]; then
 	exit $BUILD_ERR_CODE
 fi
 
+# Build drivers
+$PROJ_DIR/drivers/compile_drivers.sh
+BUILD_ERR_CODE=$?
+if [ $BUILD_ERR_CODE -ne 0 ]; then
+	exit $BUILD_ERR_CODE
+fi
+
 #Build image
 IMG="wakatiwai-$PROFILE.img"
 echo "Outputting to $IMG"
@@ -108,12 +115,12 @@ while read -r part; do
 	if [ $(echo $part | jq ".type") = "\"BOOT\"" ]; then
 		sudo mkfs.fat -F 32 $LOPT > /dev/null
 		sudo mount $LOPT $MNTPT
-		
 		sudo mkdir -p $MNTPT/EFI/BOOT
 		sudo cp $PROJ_DIR/out/wakatiwai.efi $MNTPT/EFI/BOOT/BOOTX64.EFI
 		jq ".config" $WTPROF > /tmp/wtconfig.json
 		sudo mkdir -p $MNTPT/EFI/wakatiwai
 		sudo cp /tmp/wtconfig.json $MNTPT/EFI/wakatiwai/wtconfig.json
+		sudo cp -r $PROJ_DIR/out/drivers $MNTPT/EFI/wakatiwai
 
 		echo "Created Wakatiwai boot partition on partition $LOPC"
 		FS_TYPE="BOOT" # makes unmounting easier
@@ -154,7 +161,7 @@ while read -r part; do
 			for content_pair in $content; do
 				from=$(echo $content_pair | jq ".from" | tr -d '"') >> /dev/null
 				to=$(echo $content_pair | jq ".to" | tr -d '"') >> /dev/null
-				to=$(realpath $(dirname "$MNTPT""$to"))
+				to=$(dirname "$MNTPT""$to")
 				echo "Copying $from to $to"
 				sudo mkdir -p $to
 				sudo cp -r $from $to

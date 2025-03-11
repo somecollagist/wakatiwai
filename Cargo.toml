@@ -8,8 +8,9 @@ chrono = { version = "0.4.38", default-features = false }
 crc = "3.2.1"
 microjson = "0.1.6"
 spin = { version = "0.9.8", features = ["rwlock"] }
-uefi = { version = "0.34.1", features = ["alloc", "global_allocator"] }
-uefi-raw = "0.10.0"
+uefi = { version = "^0.34", features = ["alloc", "global_allocator"] }
+uefi-raw = "^0.10"
+springboard = { version = "0.1.0", path = "springboard" }
 
 [profile.release]
 opt-level = "z"

@@ -100,7 +100,6 @@ pub fn read_file(entry: &BootEntry, path: &str) -> Result<*mut [u8], BootFailure
             continue;
         }
 
-        // partition_handle = Some(*handle);
         let mut partition_handle = PARTITION_HANDLE.write();
         *partition_handle = Some(handle.as_ptr() as usize);
         break;
