@@ -13,9 +13,7 @@ use alloc::vec::Vec;
 use uefi::boot::{open_protocol_exclusive, LoadImageSource, MemoryType, PAGE_SIZE};
 use uefi::proto::device_path::build::media::FilePath;
 use uefi::proto::device_path::build::DevicePathBuilder;
-use uefi::proto::device_path::text::{AllowShortcuts, DisplayOnly};
-use uefi::proto::device_path::{DevicePath, DeviceSubType, LoadedImageDevicePath};
-use uefi::proto::loaded_image::LoadedImage;
+use uefi::proto::device_path::{DeviceSubType, LoadedImageDevicePath};
 use uefi::{cstr16, CStr16, CString16, Handle, Status};
 
 const DRIVER_ARGS_MEMTYPE: MemoryType           = MemoryType::custom(0xCA11_A565);

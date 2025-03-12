@@ -3,7 +3,6 @@ pub mod locate;
 use uefi::boot::AllocateType;
 use uefi::Status;
 
-use crate::io::DRIVER_IO_SIZE;
 use crate::*;
 
 pub fn get_mut_args() -> Result<&'static mut io::DriverIO, ()>{
