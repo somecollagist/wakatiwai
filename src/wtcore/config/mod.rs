@@ -12,8 +12,6 @@ use core::str::FromStr;
 use spin::RwLock;
 use uefi::{cstr16, CStr16, Guid};
 
-use crate::wtcore::*;
-
 /// Path to the bootloader configuration file.
 const CONFIG_PATH: &CStr16 = cstr16!("\\EFI\\wakatiwai\\wtconfig.json");
 
@@ -138,11 +136,11 @@ pub struct BootEntry {
     /// The GUID of the disk containing this boot option.
     pub disk_guid: Guid,
     /// The partition of the disk containing this boot option.
-    pub partition: u32,
+    pub partition: u8,
     /// The type of file system upon which this boot option resides.
-    pub fs: FS,
+    pub fstype: String,
     /// The type of program this boot option points to.
-    pub progtype: Progtype,
+    pub ostype: String,
     /// The path of the boot option to be run.
     pub path: String,
     /// The path of the inital ramdisk to use.
@@ -161,9 +159,9 @@ impl BootEntry {
     #[doc(hidden)]
     const KEY_PARTITION: &'static str = "partition";
     #[doc(hidden)]
-    const KEY_FS: &'static str = "fs";
+    const KEY_FS: &'static str = "fstype";
     #[doc(hidden)]
-    const KEY_PROGTYPE: &'static str = "progtype";
+    const KEY_PROGTYPE: &'static str = "ostype";
     #[doc(hidden)]
     const KEY_PATH: &'static str = "path";
     #[doc(hidden)]
@@ -194,8 +192,8 @@ impl Display for BootEntry {
             removable_key = BootEntry::KEY_REMOVABLE, removable_val = self.removable,
             disk_key = BootEntry::KEY_DISK, disk_val = self.disk_guid,
             partition_key = BootEntry::KEY_PARTITION, partition_val = self.partition,
-            fs_key = BootEntry::KEY_FS, fs_val = self.fs,
-            progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.progtype,
+            fs_key = BootEntry::KEY_FS, fs_val = self.fstype,
+            progtype_key = BootEntry::KEY_PROGTYPE, progtype_val = self.ostype,
             path_key = BootEntry::KEY_PATH, path_val = self.path,
             initrd_key = BootEntry::KEY_INITRD, initrd_val = self.initrd,
             args_key = BootEntry::KEY_ARGS, args_val = self.args

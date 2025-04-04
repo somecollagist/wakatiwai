@@ -1,9 +1,9 @@
 use core::mem::size_of;
 
+use springboard::disk::DiskReader;
 use uefi::Status;
 
 use crate::dprintln;
-use super::reader::DiskReader;
 
 /// A structure describing the Master Boot Record (MBR).
 #[derive(Clone, Copy, Debug,)]

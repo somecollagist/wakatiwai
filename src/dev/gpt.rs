@@ -5,11 +5,11 @@ use core::borrow::Borrow;
 use core::mem::size_of;
 
 use crc::*;
+use springboard::disk::DiskReader;
 use uefi::{Char16, Guid, Status};
 
 use crate::dprintln;
 use super::mbr::MBR;
-use super::reader::DiskReader;
 
 /// A structure describing the GUID Partition Table (GPT).
 #[derive(Debug)]

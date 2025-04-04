@@ -12,8 +12,9 @@
 
 mod dev;
 mod boot;
+// mod boot_old;
 mod editor;
-mod fs;
+// mod fs;
 mod wtcore;
 
 #[macro_use]

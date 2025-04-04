@@ -4,8 +4,6 @@ use uefi::proto::media::disk::DiskIo;
 use uefi::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol};
 use uefi::{Handle, Status};
 
-use crate::image_handle;
-
 pub struct DiskReader {
     protocol: ScopedProtocol<DiskIo>,
     pub abs_offset: u64,
@@ -26,7 +24,7 @@ impl DiskReader {
             let block_io_protocol = uefi::boot::open_protocol::<BlockIO>(
                 OpenProtocolParams {
                     handle: *handle,
-                    agent: image_handle!(),
+                    agent: uefi::boot::image_handle(),
                     controller: None
                 },
                 OpenProtocolAttributes::GetProtocol
@@ -53,7 +51,7 @@ impl DiskReader {
     }
 
     pub fn read_bytes(&self, offset: u64, count: usize) -> Result<Vec<u8>, Status> {
-        let mut buffer = vec![0 as u8; count];
+        let mut buffer = alloc::vec![0 as u8; count];
         let status = self.protocol.read_disk(
             self.media_id,
             self.abs_offset + offset,

@@ -1,11 +1,9 @@
 extern crate alloc;
 
-use alloc::borrow::ToOwned;
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+use alloc::{borrow::ToOwned, format, string::{String, ToString}, vec::Vec};
 use uefi::{CStr16, CString16, Char16};
 
-use crate::fs::fat;
+use super::disk::directory_entry::*;
 
 #[derive(Clone, Debug, Default)]
 pub struct DirectoryEntry {
@@ -58,45 +56,4 @@ impl DirectoryEntry {
     pub fn is_directory(&self) -> bool {
         self.metadata.attributes & DirectoryEntryMetadata::ATTRIBUTE_DIRECTORY != 0
     }
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-#[repr(C, packed)]
-pub struct DirectoryEntryMetadata {
-    name: [u8; 8],
-    extension: [u8; 3],
-    attributes: u8,
-    reserved: u8,
-    creation_time_cs: u8,
-    creation_time: fat::Time,
-    creation_date: fat::Date,
-    accessed_date: fat::Date,
-    zero: u16,
-    modified_time: fat::Time,
-    modified_date: fat::Date,
-    pub first_cluster: u16,
-    pub file_size: u32
-}
-
-impl DirectoryEntryMetadata {
-    const ATTRIBUTE_READ_ONLY: u8   = 0x01;
-    const ATTRIBUTE_HIDDEN: u8      = 0x02;
-    const ATTRIBUTE_SYSTEM: u8      = 0x04;
-    const ATTRIBUTE_VOLUME_ID: u8   = 0x08;
-    const ATTRIBUTE_DIRECTORY: u8   = 0x10;
-    const ATTRIBUTE_ARCHIVE: u8     = 0x20;
-    const ATTRIBUTE_LFN: u8         = 0x0F;
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-#[repr(C, packed)]
-pub struct DirectoryEntryLongFileName {
-    order: u8,
-    name_high: [Char16; 5],
-    attributes: u8,
-    long_entry_type: u8,
-    checksum: u8,
-    name_mid: [Char16; 6],
-    zero: u16,
-    name_low: [Char16; 2]
 }

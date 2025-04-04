@@ -131,9 +131,9 @@ while read -r part; do
 				sudo mkfs.$FS_TYPE $LOPT > /dev/null
 				;;
 
-			fat12 | fat16 | fat32)
+			fat)
 				check_mkfs_installed mkfs.fat
-				sudo mkfs.fat -F $(echo $FS_TYPE | cut -c4,5) $LOPT > /dev/null
+				sudo mkfs.fat $LOPT > /dev/null
 				;;
 
 			btrfs)
@@ -150,7 +150,7 @@ while read -r part; do
 				;;
 		esac
 
-		echo "Created $FS_TYPE filesystem on partition $LOPC"
+		echo "Created $(sudo file -s $LOPT | grep -oE "FAT \([[:digit:]]{2} bit\)") filesystem on partition $LOPC"
 
 		if [ $FS_TYPE != "swap" ]; then # swaps need swapon but are volatile so no point populating
 			sudo mount $LOPT $MNTPT

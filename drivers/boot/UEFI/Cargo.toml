@@ -1,0 +1,9 @@
+[package]
+name = "UEFI"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+springboard = { version = "0.1.0", path = "../../../springboard" }
+uefi = { version = "^0.34", features = ["panic_handler"] }
+uefi-raw = "^0.10"

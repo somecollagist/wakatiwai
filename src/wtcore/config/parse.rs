@@ -109,9 +109,9 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
     let name            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_NAME, String::new(), true, JSONValueType::String));
     let removable       = unwrap_json_var!(get_json_var::<bool>(&json, BootEntry::KEY_REMOVABLE, false, false, JSONValueType::Bool));
     let mut disk_guid   = unwrap_json_var!(get_json_var::<Guid>(&json, BootEntry::KEY_DISK, Guid::ZERO, false, JSONValueType::String));
-    let partition       = unwrap_json_var!(get_json_var::<u32>(&json, BootEntry::KEY_PARTITION, 0, true, JSONValueType::Number));
-    let fs              = unwrap_json_var!(get_json_var::<FS>(&json, BootEntry::KEY_FS, FS::UNKNOWN, true, JSONValueType::String));
-    let progtype        = unwrap_json_var!(get_json_var::<Progtype>(&json, BootEntry::KEY_PROGTYPE, Progtype::UNKNOWN, true, JSONValueType::String));
+    let partition       = unwrap_json_var!(get_json_var::<u8>(&json, BootEntry::KEY_PARTITION, 0, true, JSONValueType::Number));
+    let fstype          = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_FS, String::new(), true, JSONValueType::String));
+    let ostype          = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_PROGTYPE, String::new(), true, JSONValueType::String));
     let path            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_PATH, String::new(), true, JSONValueType::String));
     let initrd          = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_INITRD, String::new(), false, JSONValueType::String));
     let args            = unwrap_json_var!(get_json_var::<String>(&json, BootEntry::KEY_ARGS, String::new(), false, JSONValueType::String));
@@ -126,22 +126,13 @@ fn parse_bootentry(json: JSONValue) -> Result<BootEntry, Status> {
         }
     }
 
-    if fs == FS::UNKNOWN {
-        eprintln!("Unknown filesystem \"{}\" specified", json.get_key_value(BootEntry::KEY_FS).unwrap().read_string().unwrap());
-        return Err(Status::ABORTED);
-    }
-    if progtype == Progtype::UNKNOWN {
-        eprintln!("Unknown program type \"{}\" specified", json.get_key_value(BootEntry::KEY_PROGTYPE).unwrap().read_string().unwrap());
-        return Err(Status::ABORTED);
-    }
-
     Ok(BootEntry {
         name,
         removable,
         disk_guid,
         partition,
-        fs,
-        progtype,
+        fstype,
+        ostype,
         path,
         initrd,
         args
@@ -213,24 +204,17 @@ fn get_json_var<T: Default + Debug + FromStr + 'static>(json: &JSONValue, key: &
 
     // Input supported types here
     const BOOL_TYPE: TypeId         = TypeId::of::<bool>();
-    const FS_TYPE: TypeId           = TypeId::of::<FS>();
     const GUID_TYPE: TypeId         = TypeId::of::<Guid>();
     const I32_TYPE: TypeId          = TypeId::of::<i32>();
     const LOG_LEVEL_TYPE: TypeId    = TypeId::of::<LogLevel>();
-    const PROGTYPE_TYPE: TypeId     = TypeId::of::<Progtype>();
     const STRING_TYPE: TypeId       = TypeId::of::<String>();
-    const U32_TYPE: TypeId          = TypeId::of::<u32>();
+    const U8_TYPE: TypeId           = TypeId::of::<u8>();
 
     // Describe how to deserialise to given types here
     set_on_types!(
         (BOOL_TYPE, {
             T::from_str(
                 &value.read_boolean().unwrap().to_string()
-            ).unwrap_unchecked()
-        }),
-        (FS_TYPE, {
-            T::from_str(
-                &value.read_string().unwrap()
             ).unwrap_unchecked()
         }),
         (GUID_TYPE, {
@@ -248,17 +232,12 @@ fn get_json_var<T: Default + Debug + FromStr + 'static>(json: &JSONValue, key: &
                 value.read_string().unwrap()
             ).unwrap_unchecked()
         }),
-        (PROGTYPE_TYPE, {
-            T::from_str(
-                &value.read_string().unwrap()
-            ).unwrap_unchecked()
-        }),
         (STRING_TYPE, {
             T::from_str(
                 value.read_string().unwrap()
             ).unwrap_unchecked()
         }),
-        (U32_TYPE, {
+        (U8_TYPE, {
             T::from_str(
                 &value.read_integer().unwrap().to_string()
             ).unwrap_unchecked()

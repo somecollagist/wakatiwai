@@ -1,13 +1,12 @@
 pub mod mbr;
 pub mod gpt;
-pub mod reader;
 
 extern crate alloc;
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
-use reader::DiskReader;
+use springboard::disk::DiskReader;
 use spin::Lazy;
 use uefi::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol, SearchType};
 use uefi::proto::media::disk::DiskIo;

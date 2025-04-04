@@ -36,6 +36,11 @@ ESP_MNT=$1
 ESP_DISK_PART=$(findmnt $ESP_MNT -no SOURCE | grep -oE '[0-9]+$')
 ESP_DISK_DEV=$(findmnt $ESP_MNT -no SOURCE | sed "s/p$ESP_DISK_PART$//")
 
+echo $ESP_DISK_DEV
+echo $ESP_DISK_PART
+
+exit 0
+
 sudo mkdir -p "$ESP_MNT/EFI/wakatiwai"
 sudo cp ./out/wakatiwai.efi "$ESP_MNT/EFI/wakatiwai/wakatiwai.efi"
 echo "Copied bootloader program"
