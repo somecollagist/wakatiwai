@@ -19,7 +19,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::ptr::NonNull;
 
-use uefi::boot::{open_protocol_exclusive, AllocateType, LoadImageSource, MemoryType};
+use uefi::boot::{open_protocol, AllocateType, LoadImageSource, MemoryType, OpenProtocolAttributes, OpenProtocolParams};
 use uefi::proto::device_path::build::media::FilePath;
 use uefi::proto::device_path::build::DevicePathBuilder;
 use uefi::proto::device_path::{DeviceSubType, LoadedImageDevicePath};
@@ -88,7 +88,17 @@ impl Driver {
         let mut driver_devpath_builder = DevicePathBuilder::with_vec(&mut driver_devpath_build_vec);
     
         // Push the partition device path (which wakatiwai resides on)
-        let ldimg = open_protocol_exclusive::<LoadedImageDevicePath>(uefi::boot::image_handle()).unwrap();
+        let ldimg = unsafe {
+            open_protocol::<LoadedImageDevicePath>(
+                OpenProtocolParams {
+                    handle: uefi::boot::image_handle(),
+                    agent: uefi::boot::image_handle(),
+                    controller: None
+                },
+                OpenProtocolAttributes::GetProtocol
+            ).unwrap()
+        };
+        
         for partition_devpath_node in ldimg.node_iter() {
             // Ignore the file path part, as that points to wakatiwai
             if partition_devpath_node.sub_type() == DeviceSubType(4) {
@@ -155,6 +165,7 @@ impl Driver {
         }
 
         // Start the image
+        uefi::println!("Starting driver...");
         let driver_status = match uefi::boot::start_image(self.exec_handle.unwrap()) {
             Ok(_) => Status::SUCCESS,
             Err(err) => err.status()

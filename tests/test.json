@@ -6,16 +6,16 @@
 		},
 		{
 			"type": "20",
-			"size": "32M",
+			"size": "60M",
 			"fs": "fat",
 			"content" : [
 				{
-					"from": "./install.sh",
-					"to": "/install.sh"
-				},
-				{
 					"from": "./tests/hello-uefi.efi",
 					"to": "/hello-uefi.efi"
+				},
+				{
+					"from": "/boot/EFI/Linux/arch-linux.efi",
+					"to": "/arch-linux.efi"
 				}
 			]
 		}
@@ -42,19 +42,11 @@
 				"path": "/hello-uefi.efi"
 			},
 			{
-				"name": "USB",
-				"removable": true,
-				"partition": 1,
-				"fstype": "FAT",
-				"ostype": "UEFI",
-				"path": "/usb.efi"
-			},
-			{
-				"name": "install.sh",
+				"name": "My Arch",
 				"partition": 2,
 				"fstype": "FAT",
-				"ostype": "READ",
-				"path": "/install.sh"
+				"ostype": "UEFI",
+				"path": "/arch-linux.efi"
 			}
 		]
 	}

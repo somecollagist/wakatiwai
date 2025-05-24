@@ -166,6 +166,8 @@ while read -r part; do
 				sudo mkdir -p $to
 				sudo cp -r $from $to
 			done
+
+			tree $MNTPT
 		fi
 	fi
 

@@ -29,21 +29,25 @@ BUILD_ERR_CODE=$?
 if [ $BUILD_ERR_CODE -ne 0 ]; then
 	exit $BUILD_ERR_CODE
 fi
-
 echo "Built Wakatiwai bootloader"
+
+$PROJ_DIR/drivers/compile_drivers.sh
+BUILD_ERR_CODE=$?
+if [ $BUILD_ERR_CODE -ne 0 ]; then
+	exit $BUILD_ERR_CODE
+fi
+# rm $PROJ_DIR/out/drivers/{boot,fs}/*.pdb
+echo "Built all drivers"
 
 ESP_MNT=$1
 ESP_DISK_PART=$(findmnt $ESP_MNT -no SOURCE | grep -oE '[0-9]+$')
 ESP_DISK_DEV=$(findmnt $ESP_MNT -no SOURCE | sed "s/p$ESP_DISK_PART$//")
 
-echo $ESP_DISK_DEV
-echo $ESP_DISK_PART
-
-exit 0
-
-sudo mkdir -p "$ESP_MNT/EFI/wakatiwai"
-sudo cp ./out/wakatiwai.efi "$ESP_MNT/EFI/wakatiwai/wakatiwai.efi"
+sudo mkdir -p $ESP_MNT/EFI/wakatiwai
+sudo cp $PROJ_DIR/out/wakatiwai.efi $ESP_MNT/EFI/wakatiwai/wakatiwai.efi
 echo "Copied bootloader program"
+sudo cp -r $PROJ_DIR/out/drivers $ESP_MNT/EFI/wakatiwai
+echo "Copied boot and fs drivers"
 
 CURRENT_WAKATIWAI=$(efibootmgr | grep -oE "Boot[0-9]{4}\\* Wakatiwai" | grep -oE "[0-9]{4}")
 if [ $? -eq 0 ]; then

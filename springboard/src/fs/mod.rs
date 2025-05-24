@@ -75,7 +75,7 @@ macro_rules! fs_prelude {
                 let vecptr = uefi::boot::allocate_pages(
                     uefi::boot::AllocateType::AnyPages,
                     uefi::boot::MemoryType::LOADER_DATA,
-                    filevec.len() + size_of::<usize>() / uefi::boot::PAGE_SIZE
+                    (filevec.len() + size_of::<usize>() + uefi::boot::PAGE_SIZE - 1) / uefi::boot::PAGE_SIZE
                 ).unwrap();
                 *(vecptr.as_ptr() as *mut usize) = filevec.len();
                 core::ptr::copy(filevec.as_ptr(), vecptr.as_ptr().add(size_of::<usize>()), filevec.len());

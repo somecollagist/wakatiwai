@@ -88,7 +88,7 @@ pub fn get_partition_handle(entry: &BootEntry) -> Result<Handle, BootFailure> {
                     continue;
                 }
             };
-            
+
             // Check if the device path points to the disk and partition
             if (
                 dp_protocol.to_string(DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string()

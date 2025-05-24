@@ -1,15 +1,29 @@
 use core::ffi::c_void;
+use core::fmt::Display;
 
 use alloc::string::String;
+use uefi::proto::device_path::text::{AllowShortcuts, DisplayOnly};
 use uefi::proto::device_path::DevicePath;
 
 use crate::*;
 
-#[derive(Debug)]
 pub struct BootDriverArgs<'a> {
+    pub source_handle: Handle,
     pub img: Vec<u8>,
     pub imgpath: &'a DevicePath,
     pub cmdline: &'a str,
+}
+
+impl Display for BootDriverArgs<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+"imgpath: {},
+cmdline: {:?}",
+        self.imgpath.to_string(DisplayOnly(true), AllowShortcuts(false)).unwrap().to_string(),
+        self.cmdline
+        )
+    }
 }
 
 impl BootDriver {
