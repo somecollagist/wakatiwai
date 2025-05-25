@@ -25,7 +25,7 @@ use uefi::prelude::*;
 use uefi::proto::console::text::{Key, ScanCode};
 
 use boot::attempt_boot;
-use uefi::runtime::{get_variable, set_variable, variable_exists, variable_keys, ResetType, VariableAttributes, VariableVendor};
+use uefi::runtime::{get_variable, set_variable, ResetType, VariableAttributes, VariableVendor};
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
 use wtcore::config::write::write_config;
