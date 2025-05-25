@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 
 use dev::DISK_GUID_HANDLE_MAPPING;
 use uefi::proto::console::text::{Color, Key, ScanCode};
+use uefi::runtime::VariableVendor;
 use uefi::CStr16;
 use wtcore::get_unix_time;
 
@@ -17,6 +18,8 @@ pub enum MenuOption {
     BootOption(BootEntry),
     /// Option to exit the bootloader.
     Exit,
+    /// Option to exit to firmware.
+    Firmware,
     /// Option to edit the bootloader configuration file.
     EditConfig,
     /// Option to reboot the computer
@@ -28,6 +31,8 @@ pub enum MenuOption {
 impl MenuOption {
     #[doc(hidden)]
     const EXIT_LABEL: &'static str = "Exit";
+    #[doc(hidden)]
+    const FIRMWARE_LABEL:  &'static str = "Escape to Firmware";
     #[doc(hidden)]
     const EDIT_CONFIG_LABEL: &'static str = "Edit Bootloader Config";
 }
@@ -124,6 +129,27 @@ impl BootMenu {
     fn init(&mut self) {
         let config = CONFIG.read();
 
+        // Check if firmware reboot is supported
+        let firmware_reboot_supported: bool;
+        match get_variable(cstr16!("OsIndicationsSupported"), &VariableVendor::GLOBAL_VARIABLE, &mut [0 as u8; 8]) {
+            Ok((var, _)) => {
+                // Check if the fwui bit is set
+                let os_indications_supported = unsafe { core::mem::transmute::<[u8; 8], u64>(var.try_into().unwrap()) };
+                if os_indications_supported & 0b1 == 0 {
+                    wprintln!("Firmware UI reboot is unsupported");
+                    firmware_reboot_supported = false;
+                }
+                else {
+                    firmware_reboot_supported = true;
+                }
+            }
+            Err(_) => {
+                // Unable to determine if the firmware supports fwui reboot
+                wprintln!("Missing EFI variable: OsIndicationsSupported");
+                firmware_reboot_supported = false;
+            }
+        }
+
         // Clear menu if told to do so
         if config.menu_clear {
             stdout!().clear().unwrap();
@@ -139,6 +165,10 @@ impl BootMenu {
             }
             println_force!(" #-> {}", entry.name);
             self.menu_options.push(MenuOption::BootOption(entry.clone()));
+        }
+        if config.firmware && firmware_reboot_supported {
+            println_force!(" #-$ {}", MenuOption::FIRMWARE_LABEL);
+            self.menu_options.push(MenuOption::Firmware);
         }
         if config.exit {
             println_force!(" #-! {}", MenuOption::EXIT_LABEL);
@@ -208,6 +238,7 @@ impl BootMenu {
         let option_text = match self.menu_options.get(index).unwrap() {
             MenuOption::BootOption(entry) => &entry.name,
             MenuOption::Exit => MenuOption::EXIT_LABEL,
+            MenuOption::Firmware => MenuOption::FIRMWARE_LABEL,
             MenuOption::EditConfig => MenuOption::EDIT_CONFIG_LABEL,
             _ => unreachable!()
         };

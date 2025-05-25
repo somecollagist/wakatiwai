@@ -25,7 +25,7 @@ use uefi::prelude::*;
 use uefi::proto::console::text::{Key, ScanCode};
 
 use boot::attempt_boot;
-use uefi::runtime::ResetType;
+use uefi::runtime::{get_variable, set_variable, variable_exists, variable_keys, ResetType, VariableAttributes, VariableVendor};
 use wtcore::config::*;
 use wtcore::config::load::{load_config, read_config};
 use wtcore::config::write::write_config;
@@ -83,6 +83,31 @@ fn main() -> Status {
             ).unwrap();
             // What actually needs to be done
             return Status::ABORTED;
+        }
+        MenuOption::Firmware => {
+            // Flip the first bit of OsIndications to reboot to firmware
+            let mut os_indications_buffer: u64 = 0;
+            match get_variable(
+                cstr16!("OsIndications"),
+                &VariableVendor::GLOBAL_VARIABLE,
+                &mut unsafe { core::mem::transmute::<u64, [u8; 8]>(os_indications_buffer) }
+            ) {
+                Ok((var, _)) => {
+                    os_indications_buffer = unsafe { core::mem::transmute::<[u8; 8], u64>(var.try_into().unwrap()) }
+                }
+                Err(_) => {
+                    eprintln!("Unable to set EFI variable OsIndications");
+                    return Status::ABORTED;
+                }
+            }
+            os_indications_buffer |= 1;
+            set_variable(
+                cstr16!("OsIndications"),
+                &VariableVendor::GLOBAL_VARIABLE, 
+                VariableAttributes::NON_VOLATILE | VariableAttributes::BOOTSERVICE_ACCESS | VariableAttributes::RUNTIME_ACCESS,
+                &mut unsafe { core::mem::transmute::<u64, [u8; 8]>(os_indications_buffer) }
+            ).unwrap();
+            reboot();
         }
         MenuOption::EditConfig => {
             edit_config();

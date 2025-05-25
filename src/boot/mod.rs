@@ -87,6 +87,7 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
     }
 
     if entry.ostype == "UEFI" {
+        dprintln!("Using internal UEFI loader...");
         return match uefi::boot::load_image(
             uefi::boot::image_handle(),
             uefi::boot::LoadImageSource::FromBuffer {
@@ -95,7 +96,6 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
             }
         ) {
                 Ok(ok) => {
-                    uefi::println!("Found it!");
                     match uefi::boot::start_image(ok) {
                         Ok(_) => {
                             None

@@ -27,6 +27,8 @@ pub struct Config {
     pub timeout: i32,
     /// Determines if the option to exit the bootloader should be offered.
     pub exit: bool,
+    /// Determines if the option to escape to firmware should be offered.
+    pub firmware: bool,
     /// Determines if the option to edit the bootloader configuration file should be offered.
     pub edit_config: bool,
     /// Determines if the screen should be cleared before the boot option menu is drawn.
@@ -43,6 +45,8 @@ impl Config {
     #[doc(hidden)]
     const KEY_EXIT: &'static str = "exit";
     #[doc(hidden)]
+    const KEY_FIRMWARE: &'static str = "firmware";
+    #[doc(hidden)]
     const KEY_EDIT_CONFIG: &'static str = "editconfig";
     #[doc(hidden)]
     const KEY_MENU_CLEAR: &'static str = "menuclear";
@@ -56,6 +60,8 @@ impl Config {
     #[doc(hidden)]
     const DEFAULT_EXIT: bool = true;
     #[doc(hidden)]
+    const DEFAULT_FIRMWARE: bool = true;
+    #[doc(hidden)]
     const DEFAULT_EDIT_CONFIG: bool = true;
     #[doc(hidden)]
     const DEFAULT_MENU_CLEAR: bool = true;
@@ -66,6 +72,7 @@ impl Config {
             log_level: Config::DEFAULT_LOG_LEVEL,
             timeout: Config::DEFAULT_TIMEOUT,
             exit: Config::DEFAULT_EXIT,
+            firmware: Config::DEFAULT_FIRMWARE,
             edit_config: Config::DEFAULT_EDIT_CONFIG,
             menu_clear: Config::DEFAULT_MENU_CLEAR,
             boot_entries: Vec::new(),
@@ -81,6 +88,7 @@ impl Display for Config {
     {log_level_key}: {log_level_val:?},
     {timeout_key}: {timeout_val},
     {exit_key}: {exit_val},
+    {firmware_key}: {firmware_val},
     {edit_config_key}: {edit_config_val},
     {menu_clear_key}: {menu_clear_val}
 }}",
@@ -90,6 +98,8 @@ impl Display for Config {
             timeout_val = self.timeout,
             exit_key = Config::KEY_EXIT,
             exit_val = self.exit,
+            firmware_key = Config::KEY_FIRMWARE,
+            firmware_val = self.firmware,
             edit_config_key = Config::KEY_EDIT_CONFIG,
             edit_config_val = self.edit_config,
             menu_clear_key = Config::KEY_MENU_CLEAR,

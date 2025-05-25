@@ -46,6 +46,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
     // Get config properties
     let timeout         = unwrap_json_var!(get_json_var::<i32>(&json, Config::KEY_TIMEOUT, Config::DEFAULT_TIMEOUT, false, JSONValueType::Number));
     let exit            = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EXIT, Config::DEFAULT_EXIT, false, JSONValueType::Bool));
+    let firmware        = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_FIRMWARE, Config::DEFAULT_FIRMWARE, false, JSONValueType::Bool));
     let edit_config     = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_EDIT_CONFIG, Config::DEFAULT_EDIT_CONFIG, false, JSONValueType::Bool));
     let menu_clear      = unwrap_json_var!(get_json_var::<bool>(&json, Config::KEY_MENU_CLEAR, Config::DEFAULT_MENU_CLEAR, false, JSONValueType::Bool));
 
@@ -78,6 +79,7 @@ pub fn parse_config(buffer: Vec<u8>) -> Result<(), Status> {
         log_level,
         timeout,
         exit,
+        firmware,
         edit_config,
         menu_clear,
         boot_entries
