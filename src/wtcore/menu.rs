@@ -134,7 +134,7 @@ impl BootMenu {
         match get_variable(cstr16!("OsIndicationsSupported"), &VariableVendor::GLOBAL_VARIABLE, &mut [0 as u8; 8]) {
             Ok((var, _)) => {
                 // Check if the fwui bit is set
-                let os_indications_supported = unsafe { core::mem::transmute::<[u8; 8], u64>(var.try_into().unwrap()) };
+                let os_indications_supported = u64::from_ne_bytes(var.try_into().unwrap());
                 if os_indications_supported & 0b1 == 0 {
                     wprintln!("Firmware UI reboot is unsupported");
                     firmware_reboot_supported = false;

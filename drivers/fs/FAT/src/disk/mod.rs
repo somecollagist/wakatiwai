@@ -6,7 +6,7 @@ pub mod directory_entry;
 
 use alloc::vec::Vec;
 use directory_entry::{DirectoryEntryLongFileName, DirectoryEntryMetadata};
-use springboard::disk::DiskReader;
+use wakatiwai_udive::disk::DiskReader;
 
 use crate::{data::DirectoryEntry, FATType};
 

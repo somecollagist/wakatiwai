@@ -90,10 +90,10 @@ fn main() -> Status {
             match get_variable(
                 cstr16!("OsIndications"),
                 &VariableVendor::GLOBAL_VARIABLE,
-                &mut unsafe { core::mem::transmute::<u64, [u8; 8]>(os_indications_buffer) }
+                &mut u64::to_ne_bytes(os_indications_buffer)
             ) {
                 Ok((var, _)) => {
-                    os_indications_buffer = unsafe { core::mem::transmute::<[u8; 8], u64>(var.try_into().unwrap()) }
+                    os_indications_buffer = u64::from_ne_bytes(var.try_into().unwrap())
                 }
                 Err(_) => {
                     eprintln!("Unable to set EFI variable OsIndications");
@@ -105,7 +105,7 @@ fn main() -> Status {
                 cstr16!("OsIndications"),
                 &VariableVendor::GLOBAL_VARIABLE, 
                 VariableAttributes::NON_VOLATILE | VariableAttributes::BOOTSERVICE_ACCESS | VariableAttributes::RUNTIME_ACCESS,
-                &mut unsafe { core::mem::transmute::<u64, [u8; 8]>(os_indications_buffer) }
+                &mut u64::to_ne_bytes(os_indications_buffer)
             ).unwrap();
             reboot();
         }

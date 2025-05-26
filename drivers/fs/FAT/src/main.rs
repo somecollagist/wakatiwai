@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 
-springboard::fs_prelude!();
+wakatiwai_udive::fs_prelude!();
 
 mod data;
 mod disk;

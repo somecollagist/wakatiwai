@@ -3,18 +3,13 @@ mod partition;
 use crate::wtcore::config::BootEntry;
 use crate::{dprintln, image_handle, println};
 
-use alloc::borrow::ToOwned;
-use alloc::boxed::Box;
 use alloc::vec::Vec;
-use springboard::boot::BootDriverArgs;
-use springboard::disk::DiskReader;
-use springboard::fs::FSDriverArgs;
-use springboard::{wakatiwai::*, BootDriver, FSDriver};
-use uefi::boot::{open_protocol, OpenProtocolAttributes, OpenProtocolParams};
-use uefi::proto::device_path::build::media::FilePath;
-use uefi::proto::device_path::build::DevicePathBuilder;
-use uefi::proto::device_path::DevicePath;
-use uefi::{CStr16, Char16, Handle, Status};
+use uefi::Status;
+
+use wakatiwai_udive::boot::BootDriverArgs;
+use wakatiwai_udive::disk::DiskReader;
+use wakatiwai_udive::fs::FSDriverArgs;
+use wakatiwai_udive::{wakatiwai::*, BootDriver, FSDriver};
 
 /// Possible failures that may occur when trying to boot a given entry.
 #[derive(Debug)]
@@ -133,9 +128,7 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
 
     // Boot shenanigans
     let mut boot_args = BootDriverArgs {
-        source_handle: uefi::boot::image_handle(),
         img: buffer,
-        imgpath: &get_image_path(entry, &partition_handle),
         cmdline: &entry.args
     };
     dprintln!("Invoking {} driver for {}", entry.ostype, entry.name);
@@ -148,37 +141,4 @@ pub fn attempt_boot(entry: &BootEntry) -> Option<BootFailure> {
             return Some(BootFailure::DriverInvokeFailed(some));
         }
     }
-}
-
-fn get_image_path<'a>(entry: &'a BootEntry, partition_handle: &Handle) -> Box<DevicePath> {
-    let mut imgpath_cstr16;
-    unsafe {
-        imgpath_cstr16 = entry.path
-            .chars()
-            .map(|x| if x == '/' { '\\' } else { x })
-            .map(|x| Char16::from_u16_unchecked(x as u16))
-            .collect::<Vec<Char16>>();
-        imgpath_cstr16.push(Char16::from_u16_unchecked('\0' as u16));
-    };
-
-    let mut imgpath_backing_vec = Vec::new();
-    let mut imgpath = DevicePathBuilder::with_vec(&mut imgpath_backing_vec);
-    for node in unsafe { 
-        open_protocol::<DevicePath>(
-        OpenProtocolParams {
-                handle: *partition_handle,
-                agent: uefi::boot::image_handle(),
-                controller: None
-            },
-            OpenProtocolAttributes::GetProtocol
-        ).unwrap().node_iter()
-    } {
-        imgpath = imgpath.push(&node).unwrap();
-    }
-
-    imgpath = imgpath.push(&FilePath {
-        path_name: CStr16::from_char16_until_nul(imgpath_cstr16.as_slice()).unwrap()
-    }).unwrap();
-
-    imgpath.finalize().unwrap().to_owned()
 }

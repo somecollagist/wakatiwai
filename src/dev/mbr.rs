@@ -1,7 +1,7 @@
 use core::mem::size_of;
 
-use springboard::disk::DiskReader;
 use uefi::Status;
+use wakatiwai_udive::disk::DiskReader;
 
 use crate::dprintln;
 

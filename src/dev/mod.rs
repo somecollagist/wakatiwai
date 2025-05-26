@@ -6,12 +6,12 @@ extern crate alloc;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
-use springboard::disk::DiskReader;
 use spin::Lazy;
 use uefi::boot::{OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol, SearchType};
 use uefi::proto::media::disk::DiskIo;
 use uefi::{Guid, Handle};
 use uefi_raw::protocol::*;
+use wakatiwai_udive::disk::DiskReader;
 
 use crate::{dprintln, eprintln, image_handle};
 

@@ -32,7 +32,7 @@ cd $DRIVER_NAME
 # Install dependencies
 cargo add uefi@^0.34 --features panic_handler
 cargo add uefi-raw@^0.10
-cargo add --path $DRIVERS_DIR/../springboard
+cargo add wakatiwai_udive@^0.1
 
 # Set target
 mkdir .cargo

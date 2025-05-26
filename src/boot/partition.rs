@@ -1,11 +1,11 @@
 use alloc::string::ToString;
-use springboard::disk::DiskReader;
 use uefi::boot::{open_protocol, OpenProtocolAttributes, OpenProtocolParams, ScopedProtocol};
 use uefi::proto::device_path::text::{AllowShortcuts, DisplayOnly};
 use uefi::proto::device_path::DevicePath;
 use uefi::proto::media::disk::DiskIo;
 use uefi::{Guid, Handle};
 use uefi_raw::protocol::block::BlockIoProtocol;
+use wakatiwai_udive::disk::DiskReader;
 
 use crate::dev::gpt::GPT;
 use crate::dev::DISK_GUID_HANDLE_MAPPING;

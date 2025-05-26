@@ -5,8 +5,8 @@ use core::borrow::Borrow;
 use core::mem::size_of;
 
 use crc::*;
-use springboard::disk::DiskReader;
 use uefi::{Char16, Guid, Status};
+use wakatiwai_udive::disk::DiskReader;
 
 use crate::dprintln;
 use super::mbr::MBR;
