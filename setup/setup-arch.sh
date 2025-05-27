@@ -6,7 +6,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 pacman -Syy
-pacman -S dosfstools efibootmgr jq ovmf qemu-desktop rustup --needed --noconfirm
+pacman -S dosfstools efibootmgr jq lsb-release ovmf qemu-desktop rustup --needed --noconfirm
 
 rustup default nightly
 rustup target install x86_64-unknown-uefi

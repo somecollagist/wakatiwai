@@ -1,0 +1,126 @@
+#!/bin/bash
+
+usage() {
+  cat << HELP_USAGE
+usage: wakatiwai-install <ESP>
+  ESP     : The mount point of the EFI System Partition
+
+Licensed under GPLv3
+Copyright (C) 2025  Kumomi Systems
+HELP_USAGE
+}
+
+case "$1" in
+  "" | "-h" | "--help")
+    usage
+    exit 0
+    ;;
+  
+  *)
+    ;;
+esac
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "This script must be run as root." 1>&2
+  exit 1
+fi
+
+if [ -z $(df | awk 'NR>1{print $6}' | grep -oE "$1") ]; then
+  echo "\"$1\" is not a mountpoint!"
+  usage
+  exit 1
+fi
+
+# Load all necessary variables
+eval "$(cat /etc/wakatiwai/driverlist)"
+PROJ_DIR=$(realpath $(dirname $0)/..)
+OUT=$PROJ_DIR/out
+OFFICIAL_BOOT_DRIVERS_DIR=$PROJ_DIR/drivers/boot
+OFFICIAL_FS_DRIVERS_DIR=$PROJ_DIR/drivers/fs
+BOOT_DRIVERS_OUT=$OUT/drivers/boot
+FS_DRIVERS_OUT=$OUT/drivers/fs
+
+# Clean output directory
+rm -rf $OUT
+mkdir -p $BOOT_DRIVERS_OUT
+mkdir -p $FS_DRIVERS_OUT
+
+# Build wakatiwai
+echo "Building wakatiwai"
+cd $PROJ_DIR
+cargo build --profile release --artifact-dir $OUT -Z unstable-options -q
+BUILD_ERR_CODE=$?
+if [ $BUILD_ERR_CODE -ne 0 ]; then
+  exit $BUILD_ERR_CODE
+fi
+
+# Build official drivers
+for OFFICIAL_BOOT_DRIVER in $OFFICIAL_BOOT_DRIVERS; do
+  if [[ -d $OFFICIAL_BOOT_DRIVERS_DIR/$OFFICIAL_BOOT_DRIVER ]]; then
+    echo "Building official boot driver \"$OFFICIAL_BOOT_DRIVER\""
+    cd $OFFICIAL_BOOT_DRIVERS_DIR/$OFFICIAL_BOOT_DRIVER
+    cargo build --profile release --artifact-dir $BOOT_DRIVERS_OUT -Z unstable-options -q
+    BUILD_ERR_CODE=$?
+    if [ $BUILD_ERR_CODE -ne 0 ]; then
+      exit $BUILD_ERR_CODE
+    fi
+  else
+    >&2 echo "\"$OFFICIAL_BOOT_DRIVER\" is not an official boot driver!"
+  fi
+done
+for OFFICIAL_FS_DRIVER in $OFFICIAL_FS_DRIVERS; do
+  if [[ -d $OFFICIAL_FS_DRIVERS_DIR/$OFFICIAL_FS_DRIVER ]]; then
+    echo "Building official boot driver \"$OFFICIAL_FS_DRIVER\""
+    cd $OFFICIAL_FS_DRIVERS_DIR/$OFFICIAL_FS_DRIVER
+    cargo build --profile release --artifact-dir $FS_DRIVERS_OUT -Z unstable-options -q
+    BUILD_ERR_CODE=$?
+    if [ $BUILD_ERR_CODE -ne 0 ]; then
+      exit $BUILD_ERR_CODE
+    fi
+  else
+    >&2 echo "\"$OFFICIAL_FS_DRIVER\" is not an official file system driver!"
+  fi
+done
+
+# Copy custom drivers
+for CUSTOM_BOOT_DRIVER in $CUSTOM_BOOT_DRIVERS; do
+  if [[ -f $CUSTOM_BOOT_DRIVER ]]; then
+    echo "Copying custom boot driver from \"$CUSTOM_BOOT_DRIVER\""
+    sudo cp $CUSTOM_BOOT_DRIVER $BOOT_DRIVERS_OUT
+  else
+    >&2 echo "Could not locate custom boot driver \"$CUSTOM_BOOT_DRIVER\"!"
+  fi
+done;
+for CUSTOM_FS_DRIVER in $CUSTOM_FS_DRIVERS; do
+  if [[ -f $CUSTOM_FS_DRIVER ]]; then
+    echo "Copying custom file system driver from \"$CUSTOM_FS_DRIVER\""
+    sudo cp $CUSTOM_FS_DRIVER $FS_DRIVERS_OUT
+  else
+    >&2 echo "Could not locate custom file system driver \"$CUSTOM_FS_DRIVER\"!"
+  fi
+done;
+
+# remove unnecessary .pdb files
+rm -f $BOOT_DRIVERS_OUT/*.pdb
+rm -f $FS_DRIVERS_OUT/*.pdb
+
+ESP_MNT=$1
+ESP_DISK_PART=$(findmnt $ESP_MNT -no SOURCE | grep -oE '[0-9]+$')
+ESP_DISK_DEV=$(findmnt $ESP_MNT -no SOURCE | sed "s/p$ESP_DISK_PART$//")
+
+sudo mkdir -p $ESP_MNT/EFI/wakatiwai
+sudo cp $OUT/wakatiwai.efi $ESP_MNT/EFI/wakatiwai/wakatiwai.efi
+echo "Copied bootloader program"
+sudo cp -r $OUT/drivers $ESP_MNT/EFI/wakatiwai
+echo "Copied boot and fs drivers"
+
+CURRENT_WAKATIWAI=$(efibootmgr | grep -oE "Boot[0-9]{4}\\* Wakatiwai" | grep -oE "[0-9]{4}")
+if [ $? -eq 0 ]; then
+  # Wakatiwai exists as a boot option - clean it
+  efibootmgr -B -b $CURRENT_WAKATIWAI > /dev/null
+  echo "Removed duplicate boot entry (Boot$CURRENT_WAKATIWAI)"
+fi
+
+efibootmgr -c -L "Wakatiwai" -l "\EFI\wakatiwai\wakatiwai.efi" -d $ESP_DISK_DEV -p $ESP_DISK_PART > /dev/null
+echo "Successfully added boot entry"
+echo "Done!"

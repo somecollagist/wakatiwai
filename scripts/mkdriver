@@ -1,0 +1,63 @@
+#!/bin/bash
+
+usage() {
+	cat << HELP_USAGE
+usage: wakatiwai-mkdriver <TYPE> <PATH>
+  TYPE    : The type of driver to create ("BOOT", "FS")
+  PATH    : The path to create a driver at (must not exist)
+
+Licensed under GPLv3
+Copyright (C) 2025  Kumomi Systems
+HELP_USAGE
+}
+
+if [ "$#" -ne 2 ]; then
+  usage
+  exit 1
+fi
+
+case "$1" in
+	"" | "-h" | "--help")
+		usage
+		exit 0
+		;;
+	
+	"BOOT" | "FS")
+    DRIVER_TYPE=$1
+    ;;
+  *)
+    echo "\"$1\" is not a valid driver type!"
+    usage
+    exit 1
+esac
+
+DRIVERS_DIR=$(realpath $(dirname $0)/../drivers)
+if [ $DRIVER_TYPE = "BOOT" ]; then
+  DRIVER_SRC=$DRIVERS_DIR/boot
+elif [ $DRIVER_TYPE = "FS" ]; then
+  DRIVER_SRC=$DRIVERS_DIR/fs
+fi
+
+DRIVER_PATH=$2
+if [ -e $DRIVER_PATH ]; then
+  >&2 echo "\"$DRIVER_PATH\" already exists!"
+  exit 1
+fi
+
+# Setup driver
+mkdir -p $(dirname $DRIVER_PATH)
+cd $(dirname $DRIVER_PATH)
+cargo new $(basename $DRIVER_PATH)
+cd $DRIVER_PATH
+
+# Install dependencies
+cargo add uefi@^0.34 --features panic_handler
+cargo add uefi-raw@^0.10
+cargo add wakatiwai-udive@^0.1
+
+# Set target
+mkdir .cargo
+cp $DRIVER_SRC/default_config.toml .cargo/
+
+# Populate driver main
+cat $DRIVER_SRC/default_main.rs > src/main.rs
