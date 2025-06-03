@@ -1,0 +1,13 @@
+# /etc/wakatiwai/driverlist
+
+# Officially supported boot drivers.
+OFFICIAL_BOOT_DRIVERS=()
+
+# Officially supported file system drivers.
+OFFICIAL_FS_DRIVERS=(FAT)
+
+# Custom boot drivers. Insert the path of each EFI driver.
+CUSTOM_BOOT_DRIVERS=()
+
+# Custom file system drivers. Insert the path of each EFI driver.
+CUSTOM_FS_DRIVERS=()

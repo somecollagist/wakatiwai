@@ -2,7 +2,7 @@
 
 usage() {
 	cat << HELP_USAGE
-usage: wakatiwai-mkdriver <TYPE> <PATH>
+usage: $0 <TYPE> <PATH>
   TYPE    : The type of driver to create ("BOOT", "FS")
   PATH    : The path to create a driver at (must not exist)
 
@@ -31,7 +31,7 @@ case "$1" in
     exit 1
 esac
 
-DRIVERS_DIR=$(realpath $(dirname $0)/../drivers)
+DRIVERS_DIR="$(dirname $(realpath $0))/../drivers"
 if [ $DRIVER_TYPE = "BOOT" ]; then
   DRIVER_SRC=$DRIVERS_DIR/boot
 elif [ $DRIVER_TYPE = "FS" ]; then

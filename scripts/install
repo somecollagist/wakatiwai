@@ -1,14 +1,33 @@
 #!/bin/bash
+PROJ_DIR="$(dirname $(realpath $0))/.."
+OUT=$PROJ_DIR/out
+OFFICIAL_BOOT_DRIVERS_DIR=$PROJ_DIR/drivers/boot
+OFFICIAL_FS_DRIVERS_DIR=$PROJ_DIR/drivers/fs
+BOOT_DRIVERS_OUT=$OUT/drivers/boot
+FS_DRIVERS_OUT=$OUT/drivers/fs
+DRIVERLIST_DEFAULT="/etc/wakatiwai/driverlist"
 
 usage() {
   cat << HELP_USAGE
-usage: wakatiwai-install <ESP>
-  ESP     : The mount point of the EFI System Partition
+usage: $0 [options] <ESP> [driverlist]
+  ESP         : The mount point of the EFI System Partition
+  driverlist  : The driverlist to use, defaults to $DRIVERLIST_DEFAULT
+
+Options:
+  -d          : Make wakatiwai the default boot option on this system.
 
 Licensed under GPLv3
 Copyright (C) 2025  Kumomi Systems
 HELP_USAGE
 }
+
+while getopts ":d" o; do
+  case "${o}" in
+    d)
+      OPTION_MAKE_DEFAULT=1
+      ;;
+  esac
+done
 
 case "$1" in
   "" | "-h" | "--help")
@@ -21,24 +40,35 @@ case "$1" in
 esac
 
 if [ "$(id -u)" -ne 0 ]; then
-  echo "This script must be run as root." 1>&2
+  >&2 echo "This script must be run as root."
   exit 1
 fi
 
 if [ -z $(df | awk 'NR>1{print $6}' | grep -oE "$1") ]; then
-  echo "\"$1\" is not a mountpoint!"
+  >&2 echo "\"$1\" is not a mountpoint!"
   usage
   exit 1
 fi
 
+if [ -z "$2" ]; then
+  echo "No driverlist specified, falling back to default..."
+  DRIVERLIST=$DRIVERLIST_DEFAULT
+else
+  if [ ! -f "$2" ]; then
+    >&2 echo "\"$2\" could not be read!"
+    usage
+    exit 1
+  fi
+  DRIVERLIST=$2
+fi
+
 # Load all necessary variables
-eval "$(cat /etc/wakatiwai/driverlist)"
-PROJ_DIR=$(realpath $(dirname $0)/..)
-OUT=$PROJ_DIR/out
-OFFICIAL_BOOT_DRIVERS_DIR=$PROJ_DIR/drivers/boot
-OFFICIAL_FS_DRIVERS_DIR=$PROJ_DIR/drivers/fs
-BOOT_DRIVERS_OUT=$OUT/drivers/boot
-FS_DRIVERS_OUT=$OUT/drivers/fs
+source "$DRIVERLIST"
+if [ $? -ne 0 ]; then
+  >&2 echo "Failed to read driverlist!"
+  usage
+  exit 1
+fi
 
 # Clean output directory
 rm -rf $OUT
@@ -70,7 +100,7 @@ for OFFICIAL_BOOT_DRIVER in $OFFICIAL_BOOT_DRIVERS; do
 done
 for OFFICIAL_FS_DRIVER in $OFFICIAL_FS_DRIVERS; do
   if [[ -d $OFFICIAL_FS_DRIVERS_DIR/$OFFICIAL_FS_DRIVER ]]; then
-    echo "Building official boot driver \"$OFFICIAL_FS_DRIVER\""
+    echo "Building official file system driver \"$OFFICIAL_FS_DRIVER\""
     cd $OFFICIAL_FS_DRIVERS_DIR/$OFFICIAL_FS_DRIVER
     cargo build --profile release --artifact-dir $FS_DRIVERS_OUT -Z unstable-options -q
     BUILD_ERR_CODE=$?
@@ -114,13 +144,16 @@ echo "Copied bootloader program"
 sudo cp -r $OUT/drivers $ESP_MNT/EFI/wakatiwai
 echo "Copied boot and fs drivers"
 
-CURRENT_WAKATIWAI=$(efibootmgr | grep -oE "Boot[0-9]{4}\\* Wakatiwai" | grep -oE "[0-9]{4}")
-if [ $? -eq 0 ]; then
-  # Wakatiwai exists as a boot option - clean it
-  efibootmgr -B -b $CURRENT_WAKATIWAI > /dev/null
-  echo "Removed duplicate boot entry (Boot$CURRENT_WAKATIWAI)"
+if [ $OPTION_MAKE_DEFAULT ]; then
+  CURRENT_WAKATIWAI=$(efibootmgr | grep -oE "Boot[0-9]{4}\\* Wakatiwai" | grep -oE "[0-9]{4}")
+  if [ $? -eq 0 ]; then
+    # Wakatiwai exists as a boot option - clean it
+    efibootmgr -B -b $CURRENT_WAKATIWAI > /dev/null
+    echo "Removed duplicate boot entry (Boot$CURRENT_WAKATIWAI)"
+  fi
+
+  efibootmgr -c -L "Wakatiwai" -l "\EFI\wakatiwai\wakatiwai.efi" -d $ESP_DISK_DEV -p $ESP_DISK_PART > /dev/null
+  echo "Successfully added boot entry"
 fi
 
-efibootmgr -c -L "Wakatiwai" -l "\EFI\wakatiwai\wakatiwai.efi" -d $ESP_DISK_DEV -p $ESP_DISK_PART > /dev/null
-echo "Successfully added boot entry"
 echo "Done!"
